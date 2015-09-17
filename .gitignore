@@ -29,3 +29,6 @@
 
 # Qt
 *.user*
+
+# dir
+/bin
