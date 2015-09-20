@@ -1,6 +1,6 @@
 #include "procesador.h"
 
-Procesador::Procesador (const QStringList& file_names, int latencia_de_memoria, int quantum, QObject* parent) :
+Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int quantum, QObject* parent) :
 	QObject (parent),
 	m_latencia_de_memoria (latencia_de_memoria),
 	m_quantum (quantum),
@@ -10,11 +10,11 @@ Procesador::Procesador (const QStringList& file_names, int latencia_de_memoria, 
 	m_pid(0)
 {
 	// Cargar las instrucciones de los archivos a memoria
-	for (const auto& file_name : file_names) {
-		QFile file (file_name);
+	for (const auto& nombre_archivo : nombre_archivos) {
+		QFile archivo (nombre_archivo);
 
-		if (file.open (QIODevice::ReadOnly | QIODevice::Text) ) {
-			QTextStream in (&file);
+		if (archivo.open (QIODevice::ReadOnly | QIODevice::Text) ) {
+			QTextStream in (&archivo);
 			int inicio_hilo = m_indice_memoria_instrucciones;
 			// Lee las instrucciones y las pone en la memoria
 			while ( !in.atEnd() ) {
@@ -35,7 +35,10 @@ Procesador::Procesador (const QStringList& file_names, int latencia_de_memoria, 
 	}
 }
 
-Procesador::~Procesador()
-{
+Procesador::~Procesador() {
 	delete[] m_memoria_instrucciones;
+}
+
+void Procesador::run() {
+
 }

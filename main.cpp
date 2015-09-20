@@ -2,23 +2,23 @@
 #include <QDebug>
 #include <QFile>
 #include <QStringList>
-#include "controller.h"
+#include "controlador.h"
 
 int main (int argc, char* argv[]) {
 	QCoreApplication app (argc, argv);
 
 	if (argc > 0) {
-		QFile file (argv[1]);
+		QFile archivo_informacion (argv[1]);
 
-		if (file.open (QIODevice::ReadOnly | QIODevice::Text) ) {
-			QStringList files_name;
-			QTextStream in (&file);
+		if (archivo_informacion.open (QIODevice::ReadOnly | QIODevice::Text) ) {
+			QStringList informacion;
+			QTextStream in (&archivo_informacion);
 
 			while (!in.atEnd() ) {
-				files_name << in.readLine();
+				informacion << in.readLine();
 			}
 
-			Controller controlador (files_name);
+			Controlador controlador (informacion);
 		}
 		else {
 			qDebug() << "Lo siento, el archivo no pudo ser abierto";

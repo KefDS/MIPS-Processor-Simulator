@@ -18,9 +18,9 @@ TEMPLATE = app
 SOURCES += main.cpp \
     nucleo.cpp \
     procesador.cpp \
-    controller.cpp
+    controlador.cpp
 
 HEADERS += \
     nucleo.h \
     procesador.h \
-    controller.h
+    controlador.h

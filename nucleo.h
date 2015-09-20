@@ -3,26 +3,30 @@
 
 #include "procesador.h"
 #include <QObject>
+#include <QString>
 
 class Nucleo : public QObject {
 	Q_OBJECT
 
-  public:
-	// Constructor
-	explicit Nucleo (Procesador& procesador, QObject* parent = 0);
+	public:
+		Nucleo (Procesador& procesador, const QString& nombre, QObject* parent = 0);
 
-	// Destructor
-	virtual ~Nucleo();
+		~Nucleo();
 
-  signals:
+	signals:
+		void reportar_estado(const QString& estado);
 
-  public slots:
+	public slots:
+		void run();
 
-private:
-	/* Cada núcleo tendrá su propio apuntador a procesador, para así poder realizar operaciones
-	 * como: cambiar de contexto, aumentar el reloj, etc */
-	Procesador& m_procesador; // Variable compartida
-	int const* m_registros;
+	private:
+		QString nombre;
+
+		// Cada núcleo tendrá su propio apuntador a procesador
+		Procesador& m_procesador;
+
+		int const* m_registros;
+
+		int m_quantum_de_proceso_actual;
 };
-
 #endif // NUCLEO_H
