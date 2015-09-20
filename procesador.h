@@ -28,7 +28,7 @@ class Procesador : public QObject {
 		Q_OBJECT
 
 	public:
-		Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int quantum, QObject* parent = 0);
+		Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int trasferencia, int quantum, QObject* parent = 0);
 
 		~Procesador();
 
@@ -38,6 +38,7 @@ class Procesador : public QObject {
 	private:
 		const int m_latencia_de_memoria;
 		const int m_quantum;
+		const int m_trasferencia_memoria_cache;
 
 		// Memoria donde se encontrarán las instrucciones de los hilos
 		int* const m_memoria_instrucciones;

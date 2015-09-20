@@ -4,11 +4,11 @@ Controlador::Controlador (const QStringList& informacion, QObject* parent) :
 	QObject (parent)
 {
 	QStringList nombres_archivos;
-	for (int i = 2; i < informacion.length (); ++i) {
+	for (int i = 3; i < informacion.length (); ++i) {
 		nombres_archivos << informacion.at(i);
 	}
 
-	Procesador* procesador = new Procesador(nombres_archivos, informacion.at(0).toInt(), informacion.at(1).toInt());
+	Procesador* procesador = new Procesador(nombres_archivos, informacion.at(0).toInt(), informacion.at(1).toInt(), informacion.at(3).toInt());
 	Nucleo* nucleo_1 = new Nucleo(*procesador, "Nucleo 1");
 	Nucleo* nucleo_2 = new Nucleo(*procesador, "Nucleo 2");
 

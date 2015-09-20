@@ -1,9 +1,10 @@
 #include "procesador.h"
 
-Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int quantum, QObject* parent) :
+Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int trasferencia, int quantum, QObject* parent) :
 	QObject (parent),
 	m_latencia_de_memoria (latencia_de_memoria),
 	m_quantum (quantum),
+	m_trasferencia_memoria_cache(trasferencia),
 	m_memoria_instrucciones (new int[MEMORIA_INSTRUCCIONES]),
 	m_cola_procesos(QQueue<Proceso>()),
 	m_indice_memoria_instrucciones(0),
