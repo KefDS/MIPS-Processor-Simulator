@@ -1,16 +1,12 @@
 #include "controlador.h"
+#include "mainwindow.h"
 
-Controlador::Controlador (const QStringList& informacion, QObject* parent) :
+Controlador::Controlador (const QStringList& rutas_archivos, const Datos_usuario& datos, QObject* parent) :
 	QObject (parent)
 {
-	QStringList nombres_archivos;
-	for (int i = 3; i < informacion.length (); ++i) {
-		nombres_archivos << informacion.at(i);
-	}
-
-	Procesador* procesador = new Procesador(nombres_archivos, informacion.at(0).toInt(), informacion.at(1).toInt(), informacion.at(3).toInt());
-	Nucleo* nucleo_1 = new Nucleo(*procesador, "Nucleo 1");
-	Nucleo* nucleo_2 = new Nucleo(*procesador, "Nucleo 2");
+	Procesador* procesador	= new Procesador(rutas_archivos, datos.latencia_de_memoria, datos.trasferencia, datos.quatum);
+	Nucleo* nucleo_1		= new Nucleo(*procesador, "Nucleo 1");
+	Nucleo* nucleo_2		= new Nucleo(*procesador, "Nucleo 2");
 
 	// Se mueven el procesador y los núcleos a hilos diferentes
 	procesador->moveToThread (&m_thread_procesador);
@@ -28,6 +24,9 @@ Controlador::Controlador (const QStringList& informacion, QObject* parent) :
 	connect(&m_thread_procesador, &QThread::finished, procesador, &QObject::deleteLater);
 	connect(&m_thread_nucleo_1, &QThread::finished, nucleo_1, &QObject::deleteLater);
 	connect(&m_thread_nucleo_2, &QThread::finished, nucleo_2, &QObject::deleteLater);
+
+	// Revisar!
+	connect(this, &Controlador::enviar_estado, reinterpret_cast<MainWindow*>(parent), &MainWindow::imprimir_estado);
 }
 
 Controlador::~Controlador() {

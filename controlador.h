@@ -8,11 +8,25 @@
 #include <QThread>
 #include "procesador.h"
 
+struct Datos_usuario {
+	int latencia_de_memoria;
+	int trasferencia;
+	int quatum;
+
+	Datos_usuario(int latencia_de_memoria, int trasferencia, int quatum) :
+		latencia_de_memoria(latencia_de_memoria),
+		trasferencia(trasferencia),
+		quatum(quatum)
+	{
+
+	}
+};
+
 class Controlador : public QObject {
 	Q_OBJECT
 
 	public:
-		Controlador (const QStringList& informacion, QObject* parent = 0);
+		Controlador(const QStringList& rutas_archivos, const Datos_usuario& datos, QObject* parent = 0);
 
 		~Controlador();
 
@@ -22,7 +36,7 @@ class Controlador : public QObject {
 		void imprimir_estado(QString estado);
 
 	signals:
-		void empezar_simulacion();
+		void enviar_estado(QString estado);
 
 	private:
 		QThread m_thread_procesador;
