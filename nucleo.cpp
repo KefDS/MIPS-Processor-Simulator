@@ -1,4 +1,6 @@
 #include "nucleo.h"
+#include <QThread>
+#include <QDebug>
 
 Nucleo::Nucleo (Procesador& procesador, const QString& nombre, QObject* parent) :
 	QObject (parent),
@@ -15,5 +17,9 @@ Nucleo::~Nucleo() {
 }
 
 void Nucleo::run() {
+    QString n = this->nombre;
+    emit reportar_estado(n);
 
+   //  int numeroBloque = PC/16;
+   //  int numeroPagina = (PC%16)/4;
 }

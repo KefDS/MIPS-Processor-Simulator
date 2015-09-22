@@ -24,7 +24,8 @@ Controlador::Controlador (const QStringList& rutas_archivos, const Datos_usuario
 	connect(&m_thread_procesador, &QThread::finished, procesador, &QObject::deleteLater);
 	connect(&m_thread_nucleo_1, &QThread::finished, nucleo_1, &QObject::deleteLater);
 	connect(&m_thread_nucleo_2, &QThread::finished, nucleo_2, &QObject::deleteLater);
-
+    connect(nucleo_1, &Nucleo::reportar_estado, this, &Controlador::enviar_estado);
+    connect(nucleo_2, &Nucleo::reportar_estado, this, &Controlador::enviar_estado);
 	// Revisar!
 	connect(this, &Controlador::enviar_estado, reinterpret_cast<MainWindow*>(parent), &MainWindow::imprimir_estado);
 }
@@ -42,6 +43,7 @@ Controlador::~Controlador() {
 
 void Controlador::comenzar_simulacion() {
 	// Empieza la ejecucción de los hilos
+   // qDebug() << "empieza";
 	m_thread_procesador.start();
 	m_thread_nucleo_1.start();
 	m_thread_nucleo_2.start();

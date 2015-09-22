@@ -30,7 +30,7 @@ void MainWindow::seleccionar_archivos() {
 void MainWindow::empezar_simulacion() {
 	Datos_usuario datos(ui->latenciaMemoriaSpinBox->value (), ui->trasferenciaSpinBox->value (), ui->quatumSpinBox->value ());
 	m_controlador = new Controlador(m_rutas_archivos, datos, this);
-	//controlador.comenzar_simulacion ();
+    m_controlador->comenzar_simulacion ();
 }
 
 void MainWindow::imprimir_estado(QString estado) {

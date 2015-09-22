@@ -1,4 +1,6 @@
 #include "procesador.h"
+#include <QDebug>
+#include <QThread>
 
 Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int trasferencia, int quantum, QObject* parent) :
 	QObject (parent),
@@ -31,7 +33,7 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 			Proceso* proc = new Proceso();
 			proc->pid = m_pid++;
 			proc->registros[PC] = inicio_hilo;
-			m_cola_procesos.enqueue(*proc);
+            m_cola_procesos.enqueue(*proc);
 		}
 	}
 }
@@ -41,5 +43,8 @@ Procesador::~Procesador() {
 }
 
 void Procesador::run() {
-
+    qDebug() << "corriendo procesador" << QThread::currentThreadId();
+    for (int i = 0; i < 20; i++) {
+        qDebug() << "instrucciones " << m_memoria_instrucciones[i];
+    }
 }
