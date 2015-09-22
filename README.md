@@ -34,9 +34,7 @@ Estos mutex se implementarán tan solo usando dos instrucciones que agregaremos 
 Muy diferente a como usualmente ocurre en la realidad, ya que cuando en un programa se ha incluido una herramienta de sincronización, cuando ésta debe ejecutarse, lo que sucede es que se da una interrupción y se hace un llamado a una rutina del sistema operativo, la cual es la que realiza la sincronización, utilizando instrucciones como el *LL* y *SC*.
 
 
-## Uso (Temporal)
-Al ejecutar el programa se le envía por parámetro un archivo con la siguiente información (cada uno en una línea y en el orden que se dicta):
-* Latencia de memoria *(m)*.
-* Ciclos para transferir una palabra de memoria a caché o viceversa. *(b)*
-* Quatum (Número de ciclos que tiene un proceso antes de que el procesador cambie de contexto) *(x)*.
-* Rutas donde se encuentra los hilos del proceso a correr en el procesador.
+## Uso
+1. En la parte izquierda del programa se ecnuetran 3 spinbox donde se podrán seleccionar la **latencia de memoria**, **Trasferencia de una plabara de caché a memoria** y el **Quatum**.
+2. Presionar el botón **Seleccionar archivos** y seleccionar los archivos que contienen las instrucciones a ejecutar en el núcleo.
+3. Presionar el botón **Comenzar ejecución** para empezar la simulación de los núcleos *MIPS*

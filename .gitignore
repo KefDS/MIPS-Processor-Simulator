@@ -32,3 +32,6 @@
 
 # dir
 /bin
+
+#config
+.gitconfig
