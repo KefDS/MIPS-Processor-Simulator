@@ -21,14 +21,16 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 			int inicio_hilo = m_indice_memoria_instrucciones;
 			// Lee las instrucciones y las pone en la memoria
 			while ( !in.atEnd() ) {
-				QString instruccion = in.readLine();
-				// Toma cada dos números, los convierte a enteros y los coloca en la memoria ram
-				// (las instrucciones son de 4 bytes, osea el ciclo se hace 4 veces)
-				for (int i = 0; i < 6; i += 2) {
-					m_memoria_instrucciones[m_indice_memoria_instrucciones] = instruccion.mid(i, 2).toInt();
-					++m_indice_memoria_instrucciones;
-				}
-			}
+                QString instruccion =in.readLine();
+                QStringList instrucciones;
+                instrucciones = instruccion.split(' ');
+
+                for (const auto& i : instrucciones)
+                {
+                    m_memoria_instrucciones[m_indice_memoria_instrucciones] = i.toInt();
+                    ++m_indice_memoria_instrucciones;
+                }
+            }
 			// Crea el proceso para enviarlo a la cola
 			Proceso* proc = new Proceso();
 			proc->pid = m_pid++;
