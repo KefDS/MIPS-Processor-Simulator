@@ -5,6 +5,7 @@ Controlador::Controlador (const QStringList& rutas_archivos, const Datos_usuario
 	QObject (parent)
 {
     m_procesador            = new Procesador(rutas_archivos, datos.latencia_de_memoria, datos.trasferencia, datos.quatum);
+    m_procesador->imprimirMemoria();
     Nucleo* nucleo_1		= new Nucleo(*m_procesador, "Nucleo 1");
     Nucleo* nucleo_2		= new Nucleo(*m_procesador, "Nucleo 2");
 

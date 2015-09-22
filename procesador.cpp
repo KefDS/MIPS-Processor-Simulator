@@ -1,13 +1,11 @@
 #include "procesador.h"
-#include <QDebug>
-#include <QThread>
 
 Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int trasferencia, int quantum, QObject* parent) :
 	QObject (parent),
 	m_latencia_de_memoria (latencia_de_memoria),
 	m_quantum (quantum),
 	m_trasferencia_memoria_cache(trasferencia),
-	m_memoria_instrucciones (new int[MEMORIA_INSTRUCCIONES]),
+    m_memoria_instrucciones (new Bloque[NUMERO_BLOQUES_INSTRUCCIONES]),
 	m_cola_procesos(QQueue<Proceso>()),
 	m_indice_memoria_instrucciones(0),
 	m_pid(0)
@@ -21,14 +19,18 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 			int inicio_hilo = m_indice_memoria_instrucciones;
 			// Lee las instrucciones y las pone en la memoria
 			while ( !in.atEnd() ) {
-                QString instruccion =in.readLine();
-                QStringList instrucciones;
-                instrucciones = instruccion.split(' ');
+                QString instruccion = in.readLine();
+                QStringList partes_de_instruccion = instruccion.split(' ');
 
-                for (const auto& i : instrucciones)
+                int i = 0;
+                for (const auto& parte_de_instruccion : partes_de_instruccion)
                 {
-                    m_memoria_instrucciones[m_indice_memoria_instrucciones] = i.toInt();
+                    int numero_de_bloque = m_indice_memoria_instrucciones / 16;
+                    int numero_de_pagina = (m_indice_memoria_instrucciones % 16) / 4;
+
+                    m_memoria_instrucciones[numero_de_bloque].palabra[numero_de_pagina].celda[i] = parte_de_instruccion.toInt();
                     ++m_indice_memoria_instrucciones;
+                    ++i;
                 }
             }
 			// Crea el proceso para enviarlo a la cola
@@ -41,12 +43,21 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 }
 
 Procesador::~Procesador() {
-	delete[] m_memoria_instrucciones;
+    delete[] m_memoria_instrucciones;
 }
 
-void Procesador::run() {
-    qDebug() << "corriendo procesador" << QThread::currentThreadId();
-    for (int i = 0; i < 20; i++) {
-        qDebug() << "instrucciones " << m_memoria_instrucciones[i];
+bool Procesador::colaVacia() {
+    QMutexLocker locker(&mutex_cola_procesos);
+    return m_cola_procesos.empty();
+}
+
+Proceso Procesador::tomarProceso() {
+    QMutexLocker locker(&mutex_cola_procesos);
+    return m_cola_procesos.dequeue();
+}
+
+void Procesador::imprimirMemoria() {
+    for (int i = 0; i < NUMERO_BLOQUES_INSTRUCCIONES; ++i) {
+        m_memoria_instrucciones[i].print();
     }
 }

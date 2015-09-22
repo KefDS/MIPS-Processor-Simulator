@@ -1,11 +1,15 @@
 #ifndef NUCLEO_H
 #define NUCLEO_H
 
-#define CACHE 128
+#define NUMERO_BLOQUES_CACHE 8
 
 #include "procesador.h"
 #include <QObject>
 #include <QString>
+
+struct Cache {
+    Bloque bloques[NUMERO_BLOQUES_CACHE];
+};
 
 class Nucleo : public QObject {
 	Q_OBJECT
@@ -22,12 +26,16 @@ class Nucleo : public QObject {
 		void run();
 
 	private:
+        void cargar_contexto(const Proceso &proceso);
+        void ejecutar_instruccion();
+
+        int *obtieneInstruccion(int);
 		QString nombre;
 
 		// Cada núcleo tendrá su propio apuntador a procesador
 		Procesador& m_procesador;
 
-		int* const m_cache_instrucciones;
+        Cache* m_cache_instrucciones;
 
 		int const* m_registros;
 
