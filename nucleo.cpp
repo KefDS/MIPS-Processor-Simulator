@@ -17,8 +17,8 @@ Nucleo::~Nucleo() {
 }
 
 void Nucleo::run() {
-    QString n = this->nombre;
-    emit reportar_estado(n);
+    QString estado = this->nombre + " Ejecutándose";
+    emit reportar_estado(estado);
 
    //  int numeroBloque = PC/16;
    //  int numeroPagina = (PC%16)/4;

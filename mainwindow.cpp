@@ -33,6 +33,6 @@ void MainWindow::empezar_simulacion() {
     m_controlador->comenzar_simulacion ();
 }
 
-void MainWindow::imprimir_estado(QString estado) {
+void MainWindow::imprimir_estado(const QString &estado) {
 	ui->salidaSimulacion->append(estado);
 }

@@ -18,7 +18,7 @@ class MainWindow : public QMainWindow {
 		~MainWindow();
 
 	public slots:
-		void imprimir_estado(QString estado);
+        void imprimir_estado(const QString& estado);
 
 	private slots:
 		void seleccionar_archivos();

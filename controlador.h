@@ -32,16 +32,13 @@ class Controlador : public QObject {
 
 		void comenzar_simulacion();
 
-	public slots:
-		void imprimir_estado(QString estado);
-
 	signals:
-		void enviar_estado(QString estado);
+        void enviar_estado(const QString& estado);
 
 	private:
-		QThread m_thread_procesador;
 		QThread m_thread_nucleo_1;
 		QThread m_thread_nucleo_2;
+        Procesador* m_procesador;
 
 		// Temporal
 		QThread m_thread_reloj;
