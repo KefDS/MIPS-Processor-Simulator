@@ -60,5 +60,10 @@ int Procesador::obtenerQuatum() const {
 void Procesador::imprimirMemoria() {
 	for (int i = 0; i < 30; ++i) {
 		qDebug() << m_memoria_instrucciones[i];
-	}
+    }
+}
+
+void Procesador::encolarProceso(Proceso aEncolar)
+{
+    m_cola_procesos.enqueue(aEncolar);
 }

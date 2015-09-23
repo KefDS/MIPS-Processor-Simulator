@@ -50,6 +50,8 @@ public:
 	// Para pruebas
 	void imprimirMemoria();
 
+    //Encola un proceso
+    void encolarProceso(Proceso);
 private:
 	const int m_latencia_de_memoria;
 	const int m_quantum;

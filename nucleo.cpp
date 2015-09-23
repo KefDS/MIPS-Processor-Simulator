@@ -36,6 +36,8 @@ void Nucleo::run() {
 			m_quantum_de_proceso_actual--;
 		}
 
+        m_procesador.encolarProceso(proceso_actual);
+
 		break;
 	}
 
@@ -53,24 +55,41 @@ void Nucleo::ejecutar_instruccion(Instruccion& instruccion) {
 	// Código de operación
 	switch (instruccion.celda[0]) {
 		case DADDI:
+            this->m_registros[instruccion.celda[2]]=this->m_registros[instruccion.celda[1]]+instruccion.celda[3];
 			break;
 		case DADD:
+            this->m_registros[instruccion.celda[3]]=this->m_registros[instruccion.celda[1]]+this->m_registros[instruccion.celda[2]];
 			break;
 		case DSUB:
+            this->m_registros[instruccion.celda[3]]=this->m_registros[instruccion.celda[1]]-this->m_registros[instruccion.celda[2]];
 			break;
 		case DMUL:
+            this->m_registros[instruccion.celda[3]]=this->m_registros[instruccion.celda[1]]*this->m_registros[instruccion.celda[2]];
 			break;
 		case DDIV:
+            this->m_registros[instruccion.celda[3]]=this->m_registros[instruccion.celda[1]]/this->m_registros[instruccion.celda[2]];
 			break;
 		case BEQZ:
+            if(this->m_registros[instruccion.celda[1]]==0)
+            {
+                this->m_registros[PC] = instruccion.celda[3];
+            }
 			break;
 		case BNEZ:
+            if(this->m_registros[instruccion.celda[1]]!=0)
+            {
+                this->m_registros[PC] = instruccion.celda[3];
+            }
 			break;
 		case JAL:
+            this->m_registros[31] = this->m_registros[PC];
+            this->m_registros[PC] = this->m_registros[PC] + instruccion.celda[3];
 			break;
 		case JR:
+            this->m_registros[PC] = this->m_registros[instruccion.celda[1]];
 			break;
 		case FIN:
+            m_quantum_de_proceso_actual=0;
 			break;
 		default:
 			emit reportar_estado (QString("La instrucción %1 no es válida para esta simulación").arg(instruccion.celda[0]));
