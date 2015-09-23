@@ -1,44 +1,51 @@
 #ifndef NUCLEO_H
 #define NUCLEO_H
 
-#define NUMERO_BLOQUES_CACHE 8
-
+#include "definiciones.h"
 #include "procesador.h"
 #include <QObject>
 #include <QString>
 
-struct Cache {
-    Bloque bloques[NUMERO_BLOQUES_CACHE];
-};
-
+/**
+ * @brief Nucleo class
+ * Esta clase representa un núcleo de un microporcesador MIPS.
+ *
+ * @author	Kevin Delgado Sandí	(kefdelgado@gmail.com).
+ *			Jean Carlo Zuñiga	().
+ */
 class Nucleo : public QObject {
 	Q_OBJECT
 
-	public:
-		Nucleo (Procesador& procesador, const QString& nombre, QObject* parent = 0);
+public:
+	Nucleo (Procesador& procesador, const QString& nombre, QObject* parent = 0);
+	~Nucleo();
 
-		~Nucleo();
+signals:
+	void reportar_estado(const QString& estado);
 
-	signals:
-		void reportar_estado(const QString& estado);
+public slots:
+	void run();
 
-	public slots:
-		void run();
+private:
 
-	private:
-        void cargar_contexto(const Proceso &proceso);
-        void ejecutar_instruccion();
+	// Métodos privados
 
-        int *obtieneInstruccion(int);
-		QString nombre;
+	/**
+		 * @brief cargar_contexto
+		 * Toma un procesos de la cola y la coloca en los registros del núcleo.
+		 * @param proceso al que se quiere ejecutar en el núcleo.
+		 */
+	void cargar_contexto(const Proceso& proceso);
+	void ejecutar_instruccion();
+	int* obtieneInstruccion() const;
 
-		// Cada núcleo tendrá su propio apuntador a procesador
-		Procesador& m_procesador;
 
-        Cache* m_cache_instrucciones;
+	// Miembros de la clase
 
-		int const* m_registros;
-
-		int m_quantum_de_proceso_actual;
+	QString nombre;
+	Procesador& m_procesador; // Cada núcleo tendrá su propio apuntador a procesador
+	Cache* m_cache_instrucciones;
+	int* const m_registros;
+	int m_quantum_de_proceso_actual;
 };
 #endif // NUCLEO_H

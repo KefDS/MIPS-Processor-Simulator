@@ -13,20 +13,20 @@ class MainWindow;
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 
-	public:
-		explicit MainWindow(QWidget* parent = 0);
-		~MainWindow();
+public:
+	explicit MainWindow(QWidget* parent = 0);
+	~MainWindow();
 
-	public slots:
-        void imprimir_estado(const QString& estado);
+public slots:
+	void imprimir_estado(const QString& estado);
 
-	private slots:
-		void seleccionar_archivos();
-		void empezar_simulacion();
+private slots:
+	void seleccionar_archivos();
+	void empezar_simulacion();
 
-	private:
-		Ui::MainWindow* ui;
-		QStringList m_rutas_archivos;
-		Controlador* m_controlador;
+private:
+	Ui::MainWindow* ui;
+	QStringList m_rutas_archivos;
+	Controlador* m_controlador;
 };
 #endif // MAINWINDOW_H

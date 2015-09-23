@@ -21,6 +21,7 @@ HEADERS += \
     nucleo.h \
     procesador.h \
     controlador.h \
-    mainwindow.h
+    mainwindow.h \
+    definiciones.h
 
 FORMS    += mainwindow.ui

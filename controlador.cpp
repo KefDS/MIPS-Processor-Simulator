@@ -2,12 +2,14 @@
 #include "mainwindow.h"
 
 Controlador::Controlador (const QStringList& rutas_archivos, const Datos_usuario& datos, QObject* parent) :
-	QObject (parent)
+	QObject (parent),
+	m_procesador(new Procesador(rutas_archivos, datos.latencia_de_memoria, datos.trasferencia, datos.quatum))
 {
-    m_procesador            = new Procesador(rutas_archivos, datos.latencia_de_memoria, datos.trasferencia, datos.quatum);
-    m_procesador->imprimirMemoria();
-    Nucleo* nucleo_1		= new Nucleo(*m_procesador, "Nucleo 1");
-    Nucleo* nucleo_2		= new Nucleo(*m_procesador, "Nucleo 2");
+	// Prueba
+	m_procesador->imprimirMemoria();
+
+	Nucleo* nucleo_1		= new Nucleo(*m_procesador, "Nucleo 0");
+	Nucleo* nucleo_2		= new Nucleo(*m_procesador, "Nucleo 1");
 
 	// Se mueven el procesador y los núcleos a hilos diferentes
 	nucleo_1->moveToThread (&m_thread_nucleo_1);
@@ -22,10 +24,10 @@ Controlador::Controlador (const QStringList& rutas_archivos, const Datos_usuario
 	// Cuando termine de ejecutarse el hilo, se eliminarán los objetos contenidos en ellos
 	connect(&m_thread_nucleo_1, &QThread::finished, nucleo_1, &QObject::deleteLater);
 	connect(&m_thread_nucleo_2, &QThread::finished, nucleo_2, &QObject::deleteLater);
-    connect(nucleo_1, &Nucleo::reportar_estado, this, &Controlador::enviar_estado);
-    connect(nucleo_2, &Nucleo::reportar_estado, this, &Controlador::enviar_estado);
+	connect(nucleo_1, &Nucleo::reportar_estado, this, &Controlador::enviar_estado);
+	connect(nucleo_2, &Nucleo::reportar_estado, this, &Controlador::enviar_estado);
 
-    // Conecta los signals de los núcleos con el textedit widget de la intefaz gráfica
+	// Conecta los signals de los núcleos con el textedit widget de la intefaz gráfica
 	connect(this, &Controlador::enviar_estado, reinterpret_cast<MainWindow*>(parent), &MainWindow::imprimir_estado);
 }
 
@@ -36,7 +38,7 @@ Controlador::~Controlador() {
 	m_thread_nucleo_2.quit();
 	m_thread_nucleo_2.wait();
 
-    delete m_procesador;
+	delete m_procesador;
 }
 
 void Controlador::comenzar_simulacion() {
