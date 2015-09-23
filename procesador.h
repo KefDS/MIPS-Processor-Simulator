@@ -9,6 +9,7 @@
 #include <QMutexLocker>
 #include <QObject>
 #include <QQueue>
+#include <QReadWriteLock>
 #include <QTextStream>
 
 /**
@@ -31,18 +32,20 @@ public:
 	// Métodos
 
 	/**
-		 * @brief colaVacia.
-		 * Verifica sí la cola de procesos está vacía.
-		 * @return true si la cola esta vacía. false en caso contrario.
-		 */
+	* @brief colaVacia.
+	* Verifica sí la cola de procesos está vacía.
+	* @return true si la cola esta vacía. false en caso contrario.
+	*/
 	bool colaVacia();
 
 	/**
-		 * @brief tomarProceso
-		 * Esta clase toma un proceso de la cola de procesos y quita el procesos de la cola.
-		 * @return Primer proceso en la cola.
-		 */
+	* @brief tomarProceso
+	* Esta clase toma un proceso de la cola de procesos y quita el procesos de la cola.
+	* @return Primer proceso en la cola.
+	*/
 	Proceso tomarProceso();
+
+	int obtenerQuatum() const;
 
 	// Para pruebas
 	void imprimirMemoria();
@@ -52,13 +55,13 @@ private:
 	const int m_quantum;
 	const int m_trasferencia_memoria_cache;
 
-	Bloque* m_memoria_instrucciones; /**< Memoria donde se encontrarán las instrucciones de los hilos */
+	int* const m_memoria_instrucciones; /**< Memoria donde se encontrarán las instrucciones de los hilos */
 
 	QQueue<Proceso> m_cola_procesos; /** Cola que contrendrá a los hilos */
 
 	// Mutex para los recursos compartidos
 	QMutex mutex_memoria_instrucciones; /**< Mutex que se encarga de sincronizar la lectura y escritura de la memoria de instrucciones */
-	QMutex mutex_cola_procesos;  /**< Mutex que se encarga de sincronizar la lectura y escritura de la cola de procesos */
+	QMutex mutex_cola_procesos;			/**< Mutex que se encarga de sincronizar la lectura y escritura de la cola de procesos */
 
 
 	// Variables auxiliares

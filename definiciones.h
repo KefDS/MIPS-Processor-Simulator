@@ -8,9 +8,26 @@
 #define NUMERO_PALABRAS_BLOQUE 4
 #define NUMERO_BLOQUES_INSTRUCCIONES 40
 #define NUMERO_BLOQUES_CACHE 8
+#define NUMERO_BYTES_MEMORIA_INSTRUCCIONES	NUMERO_BYTES_PALABRA * NUMERO_PALABRAS_BLOQUE * NUMERO_BLOQUES_INSTRUCCIONES
 
 #define NUMERO_REGISTROS 33 // 32 registros + PC
 #define PC 32
+
+// Codigos de operacion
+#define DADDI	8
+#define DADD	32
+#define DSUB	34
+#define DMUL	12
+#define DDIV	14
+#define LW		35
+#define SW		43
+#define BEQZ	4
+#define BNEZ	5
+#define JAL		3
+#define JR		2
+#define LL		11
+
+#define FIN		63
 
 // Estructuras
 
@@ -60,15 +77,16 @@ struct Palabra {
 };
 
 
+/** Para evitar confusiones se utilizará la frase Instruccion cuando lo que se quiere es una instruccion y no una palabra */
+typedef Palabra Instruccion;
+
+
 /**
  * @brief Bloque struct
  * Representa la unidad lógica de bloque.
  */
 struct Bloque {
 	Palabra palabra[NUMERO_PALABRAS_BLOQUE];
-
-	// Solo lo usará la chaché
-	int identificador_de_bloque_memoria;
 
 	void print() {
 		for (int i = 0; i < 4; ++i) {
@@ -87,6 +105,13 @@ struct Bloque {
  */
 struct Cache {
 	Bloque bloques[NUMERO_BLOQUES_CACHE];
-};
+	int identificador_de_bloque_memoria[NUMERO_BLOQUES_CACHE];
 
+	Cache() {
+		for (int i = 0; i < NUMERO_BLOQUES_CACHE; ++i) {
+			// Inválido
+			identificador_de_bloque_memoria[i] = -1;
+		}
+	}
+};
 #endif // DEFINICIONES

@@ -34,9 +34,9 @@ public:
 	// Métodos
 
 	/**
-		 * @brief comenzar_simulacion
-		 * Este método comienza la ejecución de los threads.
-		 */
+	* @brief comenzar_simulacion
+	* Este método comienza la ejecución de los threads.
+	*/
 	void comenzar_simulacion();
 
 signals:
