@@ -32,11 +32,35 @@ private:
 
 	/**
 	* @brief cargar_contexto
-	* Toma un procesos de la cola y la coloca en los registros del núcleo.
+	* Toma un proceso de la cola y coloca sus valores en los registros del núcleo.
 	* @param proceso al que se quiere ejecutar en el núcleo.
 	*/
 	void cargar_contexto(const Proceso& proceso);
-	void ejecutar_instruccion(Instruccion& instruccion);
+
+	/**
+	 * @brief guardar_contexto
+	 * Toma los registros del núcleo y lo guarda en un proceso
+	 * para que sea puesto en la cola nuevamente.
+	 * @param proceso que guardará el contexto del hilo
+	 */
+	void guardar_contexto(Proceso& proceso) const;
+
+	/**
+	 * @brief ejecutar_instruccion
+	 * Toma la instruccion y la ejecuta. Modifica PC para que apunte a la nueva dirección.
+	 * @param instruccion a ser ejecutada.
+	 * @return true si es la instruccion 'FIN', false en caso contrario.
+	 */
+	bool ejecutar_instruccion(const Instruccion& instruccion);
+
+	/**
+	 * @brief obtiene_instruccion
+	 * Con el PC se pide la instrucción que se necesita.
+	 * Si esta en caché, le devuelve el dato al núcleo
+	 * Sino debe ir a memoria, copiar el bloque deseado en caché
+	 * y devolverle el dato al núcleo.
+	 * @return instruccion pedida por el PC
+	 */
 	Instruccion obtiene_instruccion();
 
 

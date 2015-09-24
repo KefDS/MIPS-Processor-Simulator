@@ -43,15 +43,38 @@ public:
 	* Esta clase toma un proceso de la cola de procesos y quita el procesos de la cola.
 	* @return Primer proceso en la cola.
 	*/
-	Proceso tomarProceso();
+	Proceso tomar_proceso();
 
-	int obtenerQuatum() const;
+	/**
+	 * @brief encolar_proceso
+	 * Toma el contexto de proceso que le envía el núcleo
+	 * y lo encola en la cola de procesos.
+	 * @param proceso_a_encolar contexto de proceso a encolar.
+	 */
+	void encolar_proceso(const Proceso& proceso_a_encolar);
 
-	// Para pruebas
-	void imprimirMemoria();
+	/**
+	 * @brief obtener_quatum
+	 * Le devuleve al procesador el quatum que digitó el usuario.
+	 * @return quatum que digitó el usuario.
+	 */
+	int obtener_quatum() const;
 
-    //Encola un proceso
-    void encolarProceso(Proceso);
+	/**
+	 * @brief obtener_bloque
+	 * Envía una copia del bloque deseado que de
+	 * la memoria principal.
+	 * @param numero_bloque que se desea la memoria
+	 * @return Copia de bloque pedido.
+	 */
+	Bloque obtener_bloque(int numero_bloque);
+
+	/**
+	 * @brief imprimir_memoria
+	 * Imprime toda la memoria de instrucciones.
+	 */
+	void imprimir_memoria_instrucciones() const;
+
 private:
 	const int m_latencia_de_memoria;
 	const int m_quantum;

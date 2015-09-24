@@ -47,23 +47,31 @@ bool Procesador::colaVacia() {
 	return m_cola_procesos.empty();
 }
 
-Proceso Procesador::tomarProceso() {
+Proceso Procesador::tomar_proceso() {
 	QMutexLocker locker(&mutex_cola_procesos);
 	return m_cola_procesos.dequeue();
 }
 
-int Procesador::obtenerQuatum() const {
-	// Mutex?
+int Procesador::obtener_quatum() const {
 	return m_quantum;
 }
 
-void Procesador::imprimirMemoria() {
-	for (int i = 0; i < 30; ++i) {
-		qDebug() << m_memoria_instrucciones[i];
-    }
+Bloque Procesador::obtener_bloque(int numero_bloque) {
+	QMutexLocker locker(&mutex_memoria_instrucciones);
+
+	// Interpreta la memoria principal como un vector de bloques
+	Bloque* tmp = reinterpret_cast<Bloque*>(m_memoria_instrucciones);
+
+	return tmp[numero_bloque];
 }
 
-void Procesador::encolarProceso(Proceso aEncolar)
-{
-    m_cola_procesos.enqueue(aEncolar);
+void Procesador::imprimir_memoria_instrucciones() const {
+	for (int i = 0; i < 30; ++i) {
+		qDebug() << m_memoria_instrucciones[i];
+	}
+}
+
+void Procesador::encolar_proceso(const Proceso& proceso_a_encolar) {
+	QMutexLocker locker(&mutex_cola_procesos);
+	m_cola_procesos.enqueue(proceso_a_encolar);
 }
