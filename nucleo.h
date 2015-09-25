@@ -71,5 +71,8 @@ private:
 	Cache* const m_cache_instrucciones; /**< Representa la cache de instrucciones que posee el núcleo */
 	int* const m_registros;
 	int m_quantum_de_proceso_actual;
+
+
+    int c;
 };
 #endif // NUCLEO_H

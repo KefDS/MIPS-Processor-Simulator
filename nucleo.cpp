@@ -19,6 +19,8 @@ void Nucleo::run() {
 	QString estado = m_nombre + " Ejecutándose";
 	emit reportar_estado(estado);
 
+    c = 0;
+
 	// Mientras hayan procesos en la cola
 	while(!m_procesador.colaVacia()) {
 		Proceso proceso_actual = m_procesador.tomar_proceso();
@@ -31,10 +33,11 @@ void Nucleo::run() {
 
 		bool termino_hilo = false;
 
-		while (m_quantum_de_proceso_actual > 0) {
+        while (m_quantum_de_proceso_actual > 0 && c < 50) {
 			Instruccion instruccion = obtiene_instruccion();
 			termino_hilo = ejecutar_instruccion (instruccion);
 			m_quantum_de_proceso_actual--;
+            c++;
 		}
 
 		// Si el hilo no ha terminado, se envía a la cola de procesos de nuevo
@@ -46,6 +49,8 @@ void Nucleo::run() {
 			// El proceso está en memoria dinámica, si la dirección se pirede aquí, hay un memory leaks
 			// ¿Quién debería ser el responsable de borrar el proceso?
 		}
+
+
 	}
 
 	estado = m_nombre + " Terminó ejecución";
@@ -66,11 +71,19 @@ void Nucleo::guardar_contexto(Proceso& proceso) const {
 
 bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 	bool es_instruccion_fin = false;
-
+    bool es_instruccion_condicional = false;
+    qDebug() << "Instruccion actual: " << instruccion.celda[0] << " , " << instruccion.celda[1] << " , " << instruccion.celda[2] << " , " << instruccion.celda[3];
 	// Código de operación
 	switch (instruccion.celda[0]) {
 		case DADDI:
+
 			this->m_registros[instruccion.celda[2]]=this->m_registros[instruccion.celda[1]]+instruccion.celda[3];
+/*
+            for(int i = 0;  i < 33; i++)
+            {
+                qDebug() << "Registros antes de la operacion: " << i << " : " << this->m_registros[i] << "\n";
+            }
+*/
 			break;
 
 		case DADD:
@@ -90,26 +103,30 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 			break;
 
 		case BEQZ:
+            es_instruccion_condicional=true;
 			if(this->m_registros[instruccion.celda[1]]==0)
 			{
-				this->m_registros[PC] = instruccion.celda[3];
+                this->m_registros[PC] += instruccion.celda[3]*NUMERO_BYTES_PALABRA;
 			}
 			break;
 
 		case BNEZ:
+            es_instruccion_condicional=true;
 			if(this->m_registros[instruccion.celda[1]]!=0)
 			{
-				this->m_registros[PC] = instruccion.celda[3];
+                this->m_registros[PC] += instruccion.celda[3]*NUMERO_BYTES_PALABRA;
 			}
 			break;
 
 		case JAL:
+            es_instruccion_condicional=true;
 			this->m_registros[31] = this->m_registros[PC];
-			this->m_registros[PC] = this->m_registros[PC] + instruccion.celda[3];
+            this->m_registros[PC] = this->m_registros[PC] + (instruccion.celda[3]*NUMERO_BYTES_PALABRA);
 			break;
 
 		case JR:
-			this->m_registros[PC] = this->m_registros[instruccion.celda[1]];
+            es_instruccion_condicional=true;
+            this->m_registros[PC] = this->m_registros[instruccion.celda[1]];
 			break;
 
 		case FIN:
@@ -120,8 +137,19 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 		default:
 			emit reportar_estado (QString("La instrucción %1 no es válida para esta simulación").arg(instruccion.celda[0]));
 	};
+/*
+    for(int i = 0;  i < 33; i++)
+    {
+        qDebug() << "Registros antes de la operacion: " << i << " : " << this->m_registros[i] << "\n";
+    }
+*/
+    qDebug() << "---------------------------------------------------------";
+
+
+
 
 	// Aumenta el PC para que lea la siguiente instrucción
+    if(!es_instruccion_condicional)
 	m_registros[PC] += NUMERO_BYTES_PALABRA;
 
 	return es_instruccion_fin;
