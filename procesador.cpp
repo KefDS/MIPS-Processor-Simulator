@@ -22,7 +22,7 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 
 			// Lee las instrucciones y las coloca en la memoria
 			while ( !in.atEnd() ) {
-				QString instruccion = in.readLine();
+                QString instruccion = in.readLine().trimmed();
 				QStringList partes_de_instruccion = instruccion.split(' ');
 
 				for (const auto& parte_de_instruccion : partes_de_instruccion) {
@@ -88,13 +88,13 @@ void Procesador::liberar_bus_de_memoria_instrucciones() {
 
 void Procesador::aumentar_reloj() {
 	m_mutex_barrera.lock();
-	--cuenta;
-	if (cuenta > 0) {
+    --m_cuenta;
+    if (m_cuenta > 0) {
 		m_condicion.wait(&m_mutex_barrera);
 	}
 	else {
 		++m_reloj;
-		cuenta = NUMERO_NUCLEOS;
+        m_cuenta = NUMERO_NUCLEOS;
 		m_condicion.wakeAll();
 	}
 	m_mutex_barrera.unlock();
