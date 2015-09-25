@@ -15,13 +15,13 @@ SOURCES += main.cpp \
     nucleo.cpp \
     procesador.cpp \
     controlador.cpp \
-    mainwindow.cpp
+	mainwindow.cpp
 
 HEADERS += \
     nucleo.h \
     procesador.h \
     controlador.h \
     mainwindow.h \
-    definiciones.h
+	definiciones.h
 
 FORMS    += mainwindow.ui

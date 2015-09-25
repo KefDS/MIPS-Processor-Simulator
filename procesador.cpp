@@ -7,6 +7,8 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 	m_trasferencia_memoria_cache(trasferencia),
 	m_memoria_instrucciones (new int[NUMERO_BYTES_MEMORIA_INSTRUCCIONES]),
 	m_cola_procesos(QQueue<Proceso>()),
+	m_reloj(0),
+	m_cuenta(NUMERO_NUCLEOS),
 	m_indice_memoria_instrucciones(0),
 	m_pid(0)
 {
@@ -43,35 +45,63 @@ Procesador::~Procesador() {
 }
 
 bool Procesador::colaVacia() {
-	QMutexLocker locker(&mutex_cola_procesos);
+	QMutexLocker locker(&m_mutex_cola_procesos);
 	return m_cola_procesos.empty();
 }
 
 Proceso Procesador::tomar_proceso() {
-	QMutexLocker locker(&mutex_cola_procesos);
+	QMutexLocker locker(&m_mutex_cola_procesos);
 	return m_cola_procesos.dequeue();
+}
+
+void Procesador::encolar_proceso(const Proceso& proceso_a_encolar) {
+	QMutexLocker locker(&m_mutex_cola_procesos);
+	m_cola_procesos.enqueue(proceso_a_encolar);
 }
 
 int Procesador::obtener_quatum() const {
 	return m_quantum;
 }
 
-Bloque Procesador::obtener_bloque(int numero_bloque) {
-	QMutexLocker locker(&mutex_memoria_instrucciones);
+int Procesador::obtener_tiempo_traferencia() const {
+	return m_trasferencia_memoria_cache;
+}
 
+int Procesador::obtener_latencia_memoria() const {
+	return m_latencia_de_memoria;
+}
+
+Bloque Procesador::obtener_bloque(int numero_bloque) {
 	// Interpreta la memoria principal como un vector de bloques
 	Bloque* tmp = reinterpret_cast<Bloque*>(m_memoria_instrucciones);
 
 	return tmp[numero_bloque];
 }
 
-void Procesador::imprimir_memoria_instrucciones() const {
-	for (int i = 0; i < 30; ++i) {
-		qDebug() << m_memoria_instrucciones[i];
-	}
+bool Procesador::bus_de_memoria_instrucciones_libre() {
+	return m_mutex_memoria_instrucciones.tryLock ();
 }
 
-void Procesador::encolar_proceso(const Proceso& proceso_a_encolar) {
-	QMutexLocker locker(&mutex_cola_procesos);
-	m_cola_procesos.enqueue(proceso_a_encolar);
+void Procesador::liberar_bus_de_memoria_instrucciones() {
+	m_mutex_memoria_instrucciones.unlock ();
+}
+
+void Procesador::aumentar_reloj() {
+	m_mutex_barrera.lock();
+	--cuenta;
+	if (cuenta > 0) {
+		m_condicion.wait(&m_mutex_barrera);
+	}
+	else {
+		++m_reloj;
+		cuenta = NUMERO_NUCLEOS;
+		m_condicion.wakeAll();
+	}
+	m_mutex_barrera.unlock();
+}
+
+void Procesador::imprimir_memoria_instrucciones() const {
+	for (int i = 0; i < 60; ++i) {
+		qDebug() << m_memoria_instrucciones[i];
+	}
 }

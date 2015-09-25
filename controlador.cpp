@@ -8,6 +8,8 @@ Controlador::Controlador (const QStringList& rutas_archivos, const Datos_usuario
 	Nucleo* nucleo_1		= new Nucleo(*m_procesador, "Nucleo 0");
 	Nucleo* nucleo_2		= new Nucleo(*m_procesador, "Nucleo 1");
 
+	m_procesador->imprimir_memoria_instrucciones ();
+
 	// Se mueven el procesador y los núcleos a hilos diferentes
 	nucleo_1->moveToThread (&m_thread_nucleo_1);
 	nucleo_2->moveToThread (&m_thread_nucleo_2);

@@ -11,6 +11,7 @@
 #include <QQueue>
 #include <QReadWriteLock>
 #include <QTextStream>
+#include <QWaitCondition>
 
 /**
  * @brief Procesador class
@@ -55,10 +56,26 @@ public:
 
 	/**
 	 * @brief obtener_quatum
-	 * Le devuleve al procesador el quatum que digitó el usuario.
+	 * Le devuleve el quatum que digitó el usuario.
 	 * @return quatum que digitó el usuario.
 	 */
 	int obtener_quatum() const;
+
+	/**
+	 * @brief obtener_tiempo_traferencia
+	 * Devuelve el tiempo de transferencia que dura
+	 * ir un bloque de cache a memoria y viceversa.
+	 * @return tiempo de trasferencia.
+	 */
+	int obtener_tiempo_traferencia() const;
+
+	/**
+	 * @brief obtener_latencia_memoria
+	 * Devuelve el tiempo que dura la memoria
+	 * en devolver el un bloque.
+	 * @return latencia de memoria.
+	 */
+	int obtener_latencia_memoria() const;
 
 	/**
 	 * @brief obtener_bloque
@@ -68,6 +85,29 @@ public:
 	 * @return Copia de bloque pedido.
 	 */
 	Bloque obtener_bloque(int numero_bloque);
+
+	/**
+	 * @brief bus_de_memoria_instrucciones_libre
+	 * Intenta tomar el bus de datos sí este esta libre.
+	 * Si ya esta haciendo ocupado por otra cache, devuelve
+	 * un resultado negativo.
+	 * @return true si pudo obtener acceso al bus, falso en caso contrario.
+	 */
+	bool bus_de_memoria_instrucciones_libre();
+
+	/**
+	 * @brief liberar_bus_de_memoria_instrucciones
+	 * Libera el bus que va a la memoria de instrucciones.
+	 */
+	void liberar_bus_de_memoria_instrucciones();
+
+	/**
+	 * @brief aumentar_reloj
+	 * Este método espera a que todos lo núcleos llamen a esta método
+	 * para poder aumentar el reloj, para de esa manera tener sincronizado
+	 * los núcleos.
+	 */
+	void aumentar_reloj();
 
 	/**
 	 * @brief imprimir_memoria
@@ -85,8 +125,14 @@ private:
 	QQueue<Proceso> m_cola_procesos; /** Cola que contrendrá a los hilos */
 
 	// Mutex para los recursos compartidos
-	QMutex mutex_memoria_instrucciones; /**< Mutex que se encarga de sincronizar la lectura y escritura de la memoria de instrucciones */
-	QMutex mutex_cola_procesos;			/**< Mutex que se encarga de sincronizar la lectura y escritura de la cola de procesos */
+	QMutex m_mutex_memoria_instrucciones; /**< Mutex que se encarga de sincronizar la lectura y escritura de la memoria de instrucciones */
+	QMutex m_mutex_cola_procesos;			/**< Mutex que se encarga de sincronizar la lectura y escritura de la cola de procesos */
+
+	// Para el aumentar el reloj
+	int m_reloj;
+	int m_cuenta;
+	QMutex m_mutex_barrera;					/**< Mutex que se encarga de sincronizar el aumento del reloj del sistema */
+	QWaitCondition m_condicion;
 
 
 	// Variables auxiliares
