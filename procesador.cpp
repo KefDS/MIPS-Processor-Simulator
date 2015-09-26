@@ -22,7 +22,7 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 
 			// Lee las instrucciones y las coloca en la memoria
 			while ( !in.atEnd() ) {
-                QString instruccion = in.readLine().trimmed();
+				QString instruccion = in.readLine().trimmed();
 				QStringList partes_de_instruccion = instruccion.split(' ');
 
 				for (const auto& parte_de_instruccion : partes_de_instruccion) {
@@ -44,7 +44,7 @@ Procesador::~Procesador() {
 	delete[] m_memoria_instrucciones;
 }
 
-bool Procesador::colaVacia() {
+bool Procesador::cola_vacia() {
 	QMutexLocker locker(&m_mutex_cola_procesos);
 	return m_cola_procesos.empty();
 }
@@ -71,6 +71,11 @@ int Procesador::obtener_latencia_memoria() const {
 	return m_latencia_de_memoria;
 }
 
+bool Procesador::hay_hilos_a_ejecutar() {
+	QMutexLocker locker(&m_mutex_ultimo_hilo);
+	return m_es_ultimo_hilo;
+}
+
 Bloque Procesador::obtener_bloque(int numero_bloque) {
 	// Interpreta la memoria principal como un vector de bloques
 	Bloque* tmp = reinterpret_cast<Bloque*>(m_memoria_instrucciones);
@@ -88,13 +93,13 @@ void Procesador::liberar_bus_de_memoria_instrucciones() {
 
 void Procesador::aumentar_reloj() {
 	m_mutex_barrera.lock();
-    --m_cuenta;
-    if (m_cuenta > 0) {
+	--m_cuenta;
+	if (m_cuenta > 0) {
 		m_condicion.wait(&m_mutex_barrera);
 	}
 	else {
 		++m_reloj;
-        m_cuenta = NUMERO_NUCLEOS;
+		m_cuenta = NUMERO_NUCLEOS;
 		m_condicion.wakeAll();
 	}
 	m_mutex_barrera.unlock();

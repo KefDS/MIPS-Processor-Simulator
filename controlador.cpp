@@ -8,8 +8,6 @@ Controlador::Controlador (const QStringList& rutas_archivos, const Datos_usuario
 	Nucleo* nucleo_1		= new Nucleo(*m_procesador, "Nucleo 0");
 	Nucleo* nucleo_2		= new Nucleo(*m_procesador, "Nucleo 1");
 
-	m_procesador->imprimir_memoria_instrucciones ();
-
 	// Se mueven el procesador y los núcleos a hilos diferentes
 	nucleo_1->moveToThread (&m_thread_nucleo_1);
 	nucleo_2->moveToThread (&m_thread_nucleo_2);
@@ -23,6 +21,8 @@ Controlador::Controlador (const QStringList& rutas_archivos, const Datos_usuario
 	// Cuando termine de ejecutarse el hilo, se eliminarán los objetos contenidos en ellos
 	connect(&m_thread_nucleo_1, &QThread::finished, nucleo_1, &QObject::deleteLater);
 	connect(&m_thread_nucleo_2, &QThread::finished, nucleo_2, &QObject::deleteLater);
+
+	// Conecta el estado que envía el núcleo a la interfaz gráfica
 	connect(nucleo_1, &Nucleo::reportar_estado, this, &Controlador::enviar_estado);
 	connect(nucleo_2, &Nucleo::reportar_estado, this, &Controlador::enviar_estado);
 
@@ -43,4 +43,9 @@ Controlador::~Controlador() {
 void Controlador::comenzar_simulacion() {
 	m_thread_nucleo_1.start();
 	m_thread_nucleo_2.start();
+}
+
+void Controlador::terminar_simulacion() {
+	m_thread_nucleo_1.terminate();
+	m_thread_nucleo_2.terminate();
 }

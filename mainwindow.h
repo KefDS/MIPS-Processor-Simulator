@@ -23,6 +23,7 @@ public slots:
 private slots:
 	void seleccionar_archivos();
 	void empezar_simulacion();
+	void terminar_simulacion();
 
 private:
 	Ui::MainWindow* ui;

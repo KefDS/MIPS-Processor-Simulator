@@ -11,7 +11,7 @@
  * Esta clase representa un núcleo de un microporcesador MIPS.
  *
  * @author	Kevin Delgado Sandí	(kefdelgado@gmail.com).
- *			Jean Carlo Zuñiga	().
+ *			Jean Carlo Zuñiga	(jeanczm@gmail.com).
  */
 class Nucleo : public QObject {
 	Q_OBJECT

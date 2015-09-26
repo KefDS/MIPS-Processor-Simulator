@@ -20,7 +20,7 @@
  * recursos críticos, ya que ambos núcleos deben acceder a él.
  *
  * @author	Kevin Delgado Sandí	(kefdelgado@gmail.com).
- *			Jean Carlo Zuñiga	().
+ *			Jean Carlo Zuñiga	(jeanczm@gmail.com).
  */
 class Procesador : public QObject {
 	Q_OBJECT
@@ -37,7 +37,7 @@ public:
 	* Verifica sí la cola de procesos está vacía.
 	* @return true si la cola esta vacía. false en caso contrario.
 	*/
-	bool colaVacia();
+	bool cola_vacia();
 
 	/**
 	* @brief tomarProceso
@@ -76,6 +76,14 @@ public:
 	 * @return latencia de memoria.
 	 */
 	int obtener_latencia_memoria() const;
+
+	/**
+	 * @brief hay_hilos_a_ejecutar
+	 * Método que verifica si existen todavía hilos
+	 * a ejecutar.
+	 * @return true si todavía hay hilos. false en caso contrario.
+	 */
+	bool hay_hilos_a_ejecutar();
 
 	/**
 	 * @brief obtener_bloque
@@ -120,12 +128,12 @@ private:
 	const int m_quantum;
 	const int m_trasferencia_memoria_cache;
 
-	int* const m_memoria_instrucciones; /**< Memoria donde se encontrarán las instrucciones de los hilos */
+	int* const m_memoria_instrucciones;		/**< Memoria donde se encontrarán las instrucciones de los hilos */
 
-	QQueue<Proceso> m_cola_procesos; /** Cola que contrendrá a los hilos */
+	QQueue<Proceso> m_cola_procesos;		/** Cola que contrendrá a los hilos */
 
 	// Mutex para los recursos compartidos
-	QMutex m_mutex_memoria_instrucciones; /**< Mutex que se encarga de sincronizar la lectura y escritura de la memoria de instrucciones */
+	QMutex m_mutex_memoria_instrucciones;	/**< Mutex que se encarga de sincronizar la lectura y escritura de la memoria de instrucciones */
 	QMutex m_mutex_cola_procesos;			/**< Mutex que se encarga de sincronizar la lectura y escritura de la cola de procesos */
 
 	// Para el aumentar el reloj
@@ -139,7 +147,13 @@ private:
 
 	// Esta variable tendrá la posición libre de la memoria de instrucciones
 	int m_indice_memoria_instrucciones;
+
 	// Tiene los pid de los procesos
 	int m_pid;
+
+	// Indica si es el último hilo que queda por procesar
+	QMutex m_mutex_ultimo_hilo;
+	bool m_es_ultimo_hilo;
 };
 #endif // PROCESADOR_H
+

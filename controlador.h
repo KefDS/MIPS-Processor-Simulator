@@ -21,14 +21,13 @@
  * para realizar su tarea.
  *
  * @author	Kevin Delgado Sandí	(kefdelgado@gmail.com).
- *			Jean Carlo Zuñiga	().
+ *			Jean Carlo Zuñiga	(jeanczm@gmail.com).
  */
 class Controlador : public QObject {
 	Q_OBJECT
 
 public:
 	Controlador(const QStringList& rutas_archivos, const Datos_usuario& datos, QObject* parent = 0);
-
 	~Controlador();
 
 	// Métodos
@@ -39,16 +38,18 @@ public:
 	*/
 	void comenzar_simulacion();
 
+	/**
+	 * @brief terminar_simulacion
+	 * Este método termina la ejecucción de los threads.
+	 */
+	void terminar_simulacion();
+
 signals:
 	void enviar_estado(const QString& estado);
 
 private:
 	QThread m_thread_nucleo_1; /**< QThread que contendrá el núcleo 0 */
 	QThread m_thread_nucleo_2; /**< QThread que contendrá el núcleo 1 */
-
 	Procesador* const m_procesador; /**< Esta variable tendrá los recursos críticos que deben compartir los núcleos */
-
-	// Temporal
-	QThread m_thread_reloj;
 };
 #endif // CONTROLADOR_H
