@@ -60,10 +60,11 @@ struct Proceso {
 	int pid;
 	int registros[NUMERO_REGISTROS];
 
-	Proceso() {
+	Proceso(int pid, int pc) : pid(pid) {
 		for (int i = 0; i < NUMERO_REGISTROS; ++i) {
 			registros[i] = 0;
 		}
+		registros[PC] = pc;
 	}
 };
 

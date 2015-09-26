@@ -25,7 +25,7 @@ void Nucleo::run() {
 	while(!m_procesador.cola_vacia()) {
 		Proceso proceso_actual = m_procesador.tomar_proceso();
 		cargar_contexto(proceso_actual);
-		emit reportar_estado(QString(m_nombre + " va a ejecutar el hilo con PID %1").arg(proceso_actual.pid));
+		emit reportar_estado(QString(m_nombre + " va a ejecutar el hilo con PID %1.").arg(proceso_actual.pid));
 
 		m_quantum_de_proceso_actual = m_procesador.obtener_quatum();
 
@@ -33,8 +33,8 @@ void Nucleo::run() {
 
 		while (m_quantum_de_proceso_actual > 0) {
 			Instruccion instruccion = obtiene_instruccion();
-			termino_hilo = ejecutar_instruccion (instruccion);
-			m_quantum_de_proceso_actual--;
+			termino_hilo = ejecutar_instruccion(instruccion);
+			--m_quantum_de_proceso_actual;
 			//m_procesador.aumentar_reloj();
 		}
 
@@ -43,10 +43,6 @@ void Nucleo::run() {
 			guardar_contexto(proceso_actual);
 			m_procesador.encolar_proceso(proceso_actual);
 			// m_procesador.aumentar_reloj (); ?
-		}
-		else {
-			// El proceso está en memoria dinámica, si la dirección se pirede aquí, hay un memory leaks
-			// ¿Quién debería ser el responsable de borrar el proceso?
 		}
 	}
 	emit reportar_estado (QString(m_nombre + " terminó su ejecución."));
@@ -151,14 +147,14 @@ Instruccion Nucleo::obtiene_instruccion() {
 	int numero_de_bloque = m_registros[PC] / 16;
 	int numero_de_palabra = (m_registros[PC] % 16) / NUMERO_PALABRAS_BLOQUE;
 
-	// Contendrá el índice donde se debería encontrar el bloque en cahé si estuviera
+	// índice donde se debería encontrar el bloque en cahé si estuviera
 	int indice = numero_de_bloque % NUMERO_BLOQUES_CACHE;
 
 	// El bloque no está en caché
 	if (numero_de_bloque != m_cache_instrucciones->identificador_de_bloque_memoria[indice]) {
 
 		while(!m_procesador.bus_de_memoria_instrucciones_libre()) {
-			m_procesador.aumentar_reloj();
+			//m_procesador.aumentar_reloj();
 		}
 
 		// Se pide el bloque a memoria prinicipal

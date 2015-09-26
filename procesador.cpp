@@ -32,10 +32,7 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 			}
 
 			// Crea el proceso para enviarlo a la cola
-			Proceso* proc = new Proceso();
-			proc->pid = m_pid++;
-			proc->registros[PC] = inicio_hilo;
-			m_cola_procesos.enqueue(*proc);
+			m_cola_procesos.enqueue(Proceso(m_pid++, inicio_hilo));
 		}
 	}
 }
@@ -84,11 +81,11 @@ Bloque Procesador::obtener_bloque(int numero_bloque) {
 }
 
 bool Procesador::bus_de_memoria_instrucciones_libre() {
-	return m_mutex_memoria_instrucciones.tryLock ();
+	return m_mutex_memoria_instrucciones.tryLock();
 }
 
 void Procesador::liberar_bus_de_memoria_instrucciones() {
-	m_mutex_memoria_instrucciones.unlock ();
+	m_mutex_memoria_instrucciones.unlock();
 }
 
 void Procesador::aumentar_reloj() {
