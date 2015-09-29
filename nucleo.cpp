@@ -19,9 +19,6 @@ void Nucleo::run() {
 	emit reportar_estado(QString(m_nombre + " empezó su ejecución."));
 
 	// Mientras hayan procesos en la cola
-	// TODO: Revisar esta condición de parada, ya que cuando se implemente reloj
-	// si un núcleo termina y hay procesos corriendo, el núcleo corriendo puede bloquearse
-	// para siempre
 	while(!m_procesador.cola_vacia()) {
 		Proceso proceso_actual = m_procesador.tomar_proceso();
 		cargar_contexto(proceso_actual);
@@ -35,16 +32,18 @@ void Nucleo::run() {
 			Instruccion instruccion = obtiene_instruccion();
 			termino_hilo = ejecutar_instruccion(instruccion);
 			--m_quantum_de_proceso_actual;
-			//m_procesador.aumentar_reloj();
+            m_procesador.aumentar_reloj();
 		}
 
 		// Si el hilo no ha terminado, se envía a la cola de procesos de nuevo
 		if (!termino_hilo) {
 			guardar_contexto(proceso_actual);
 			m_procesador.encolar_proceso(proceso_actual);
-			// m_procesador.aumentar_reloj (); ?
 		}
 	}
+
+    m_procesador.fin_nucleo();
+
 	emit reportar_estado (QString(m_nombre + " terminó su ejecución."));
 }
 
@@ -62,7 +61,8 @@ void Nucleo::guardar_contexto(Proceso& proceso) const {
 
 bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 	bool es_instruccion_fin = false;
-	bool es_instruccion_de_salto = false;
+
+    m_registros[PC] += NUMERO_BYTES_PALABRA;
 
 	// Pruebas
 	qDebug() << "Instruccion actual: " << instruccion.celda[0] << " , " << instruccion.celda[1] << " , " << instruccion.celda[2] << " , " << instruccion.celda[3];
@@ -91,37 +91,23 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 
 		case BEQZ:
 			if(m_registros[instruccion.celda[1]] == 0) {
-				es_instruccion_de_salto = true;
-				if(instruccion.celda[1] > 0) {
-					m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA + 4;
-				}
-				else {
-					m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
-				}
-			}
+                m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
+            }
 			break;
 
 		case BNEZ:
 			if(m_registros[instruccion.celda[1]] != 0) {
-				es_instruccion_de_salto = true;
-				if(instruccion.celda[1] > 0) {
-					m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA + 4;
-				}
-				else {
-					m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
-				}
-			}
+                m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
+            }
 			break;
 
 		case JAL:
-			es_instruccion_de_salto = true;
-			this->m_registros[31] = this->m_registros[PC] + NUMERO_BYTES_PALABRA; //Guarda la sig
-			this->m_registros[PC] += instruccion.celda[3] + NUMERO_BYTES_PALABRA;
+            m_registros[31] = m_registros[PC];
+            m_registros[PC] += instruccion.celda[3];
 			break;
 
 		case JR:
-			es_instruccion_de_salto = true;
-			this->m_registros[PC] = this->m_registros[instruccion.celda[1]];
+            m_registros[PC] = m_registros[instruccion.celda[1]];
 			break;
 
 		case FIN:
@@ -135,10 +121,6 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 
 	// Pruebas
 	qDebug() << "---------------------------------------------------------";
-
-	// Aumenta el PC para que lea la siguiente instrucción
-	if(!es_instruccion_de_salto)
-		m_registros[PC] += NUMERO_BYTES_PALABRA;
 
 	return es_instruccion_fin;
 }
@@ -154,7 +136,7 @@ Instruccion Nucleo::obtiene_instruccion() {
 	if (numero_de_bloque != m_cache_instrucciones->identificador_de_bloque_memoria[indice]) {
 
 		while(!m_procesador.bus_de_memoria_instrucciones_libre()) {
-			//m_procesador.aumentar_reloj();
+            m_procesador.aumentar_reloj();
 		}
 
 		// Se pide el bloque a memoria prinicipal
@@ -162,10 +144,9 @@ Instruccion Nucleo::obtiene_instruccion() {
 		m_cache_instrucciones->identificador_de_bloque_memoria[indice] = numero_de_bloque;
 
 		// Aquí se da el retraso de tiempo en el cual se debe ir a memoria a traer un bloque.
-		// TODO: asignar tiempo de espera correctamente
-		int tiempo_de_espera = 0;
+        int tiempo_de_espera = m_procesador.obtener_duracion_traer_bloque_cache_instrucciones();
 		for(int i = 0; i < tiempo_de_espera; ++i) {
-			//m_procesador.aumentar_reloj();
+            m_procesador.aumentar_reloj();
 		}
 
 		m_procesador.liberar_bus_de_memoria_instrucciones();

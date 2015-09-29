@@ -2,17 +2,17 @@
 
 Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int trasferencia, int quantum, QObject* parent) :
 	QObject (parent),
-	m_latencia_de_memoria (latencia_de_memoria),
 	m_quantum (quantum),
-	m_trasferencia_memoria_cache(trasferencia),
+    // Revisar
+    m_duracion_de_traer_bloque_a_memoria_cache_instrucciones(4 * (2 * trasferencia + latencia_de_memoria) ),
 	m_memoria_instrucciones (new int[NUMERO_BYTES_MEMORIA_INSTRUCCIONES]),
-	m_cola_procesos(QQueue<Proceso>()),
+    m_numero_de_nucleos(NUMERO_NUCLEOS),
 	m_reloj(0),
-	m_cuenta(NUMERO_NUCLEOS),
+    m_cuenta(m_numero_de_nucleos),
 	m_indice_memoria_instrucciones(0),
 	m_pid(0)
 {
-	// Cargar las instrucciones de los archivos a memoria
+    // Cargar las instrucciones de los archivos a memoria
 	for (const auto& nombre_archivo : nombre_archivos) {
 		QFile archivo (nombre_archivo);
 
@@ -60,20 +60,11 @@ int Procesador::obtener_quatum() const {
 	return m_quantum;
 }
 
-int Procesador::obtener_tiempo_traferencia() const {
-	return m_trasferencia_memoria_cache;
+int Procesador::obtener_duracion_traer_bloque_cache_instrucciones() const {
+    return m_duracion_de_traer_bloque_a_memoria_cache_instrucciones;
 }
 
-int Procesador::obtener_latencia_memoria() const {
-	return m_latencia_de_memoria;
-}
-
-bool Procesador::hay_hilos_a_ejecutar() {
-	QMutexLocker locker(&m_mutex_ultimo_hilo);
-	return m_es_ultimo_hilo;
-}
-
-Bloque Procesador::obtener_bloque(int numero_bloque) {
+Bloque Procesador::obtener_bloque(int numero_bloque) const {
 	// Interpreta la memoria principal como un vector de bloques
 	Bloque* tmp = reinterpret_cast<Bloque*>(m_memoria_instrucciones);
 
@@ -96,14 +87,20 @@ void Procesador::aumentar_reloj() {
 	}
 	else {
 		++m_reloj;
-		m_cuenta = NUMERO_NUCLEOS;
+        m_cuenta = m_numero_de_nucleos;
 		m_condicion.wakeAll();
+        qDebug() << "Se aumentó reloj" << m_reloj;
 	}
 	m_mutex_barrera.unlock();
 }
 
-void Procesador::imprimir_memoria_instrucciones() const {
-	for (int i = 0; i < 60; ++i) {
-		qDebug() << m_memoria_instrucciones[i];
-	}
+void Procesador::fin_nucleo() {
+    QMutexLocker locker(&m_mutex_numero_de_nucleos);
+    QMutexLocker locker_barrera(&m_mutex_barrera);
+    // Se resta del conteo de la barrera
+    --m_cuenta;
+    // Resta la cantidad de nucleos activos
+    --m_numero_de_nucleos;
+    // Despierta a el otro núcleo si este se encontraba bloqueado
+    m_condicion.wakeAll();
 }

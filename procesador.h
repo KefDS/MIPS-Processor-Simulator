@@ -33,7 +33,7 @@ public:
 	// Métodos
 
 	/**
-	* @brief colaVacia.
+    * @brief cola_vacia.
 	* Verifica sí la cola de procesos está vacía.
 	* @return true si la cola esta vacía. false en caso contrario.
 	*/
@@ -61,29 +61,12 @@ public:
 	 */
 	int obtener_quatum() const;
 
-	/**
-	 * @brief obtener_tiempo_traferencia
-	 * Devuelve el tiempo de transferencia que dura
-	 * ir un bloque de cache a memoria y viceversa.
-	 * @return tiempo de trasferencia.
-	 */
-	int obtener_tiempo_traferencia() const;
-
-	/**
-	 * @brief obtener_latencia_memoria
-	 * Devuelve el tiempo que dura la memoria
-	 * en devolver el un bloque.
-	 * @return latencia de memoria.
-	 */
-	int obtener_latencia_memoria() const;
-
-	/**
-	 * @brief hay_hilos_a_ejecutar
-	 * Método que verifica si existen todavía hilos
-	 * a ejecutar.
-	 * @return true si todavía hay hilos. false en caso contrario.
-	 */
-	bool hay_hilos_a_ejecutar();
+    /**
+     * @brief obtener_duracion_traer_bloque_cache_instrucciones
+     * @return Obtiene el tiempo que dura la máquina en traer y/o guardar
+     * un (datos) o varios (instrucciones) bloques entre la caché y memoria.
+     */
+    int obtener_duracion_traer_bloque_cache_instrucciones() const;
 
 	/**
 	 * @brief obtener_bloque
@@ -92,7 +75,7 @@ public:
 	 * @param numero_bloque que se desea la memoria
 	 * @return Copia de bloque pedido.
 	 */
-	Bloque obtener_bloque(int numero_bloque);
+    Bloque obtener_bloque(int numero_bloque) const;
 
 	/**
 	 * @brief bus_de_memoria_instrucciones_libre
@@ -117,16 +100,16 @@ public:
 	 */
 	void aumentar_reloj();
 
-	/**
-	 * @brief imprimir_memoria
-	 * Imprime toda la memoria de instrucciones.
-	 */
-	void imprimir_memoria_instrucciones() const;
+    /**
+     * @brief fin_nucleo
+     * Este método modifica variable que son utilizadoas en la barrera
+     * para evitar el bloque permanente del otro núcleo.
+     */
+    void fin_nucleo();
 
 private:
-	const int m_latencia_de_memoria;
 	const int m_quantum;
-	const int m_trasferencia_memoria_cache;
+    const int m_duracion_de_traer_bloque_a_memoria_cache_instrucciones;
 
 	int* const m_memoria_instrucciones;		/**< Memoria donde se encontrarán las instrucciones de los hilos */
 
@@ -137,8 +120,10 @@ private:
 	QMutex m_mutex_cola_procesos;			/**< Mutex que se encarga de sincronizar la lectura y escritura de la cola de procesos */
 
 	// Para el aumentar el reloj
+    int m_numero_de_nucleos;
 	int m_reloj;
 	int m_cuenta;
+    QMutex m_mutex_numero_de_nucleos;
 	QMutex m_mutex_barrera;					/**< Mutex que se encarga de sincronizar el aumento del reloj del sistema */
 	QWaitCondition m_condicion;
 
@@ -148,12 +133,7 @@ private:
 	// Esta variable tendrá la posición libre de la memoria de instrucciones
 	int m_indice_memoria_instrucciones;
 
-	// Tiene los pid de los procesos
+    // Contador para asignar los PID a los hilos
 	int m_pid;
-
-	// Indica si es el último hilo que queda por procesar
-	QMutex m_mutex_ultimo_hilo;
-	bool m_es_ultimo_hilo;
 };
 #endif // PROCESADOR_H
-
