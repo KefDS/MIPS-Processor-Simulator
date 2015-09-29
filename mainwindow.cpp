@@ -13,7 +13,6 @@ MainWindow::MainWindow(QWidget* parent) :
 
 	connect(ui->seleccionarArchivosButton, &QPushButton::clicked, this, &MainWindow::seleccionar_archivos);
 	connect(ui->empezarSimulacionButton, &QPushButton::clicked, this, &MainWindow::empezar_simulacion);
-	connect (ui->terminarSimlacionButton, &QPushButton::clicked, this, &MainWindow::terminar_simulacion);
 }
 
 MainWindow::~MainWindow() {
@@ -32,10 +31,6 @@ void MainWindow::empezar_simulacion() {
 	Datos_usuario datos(ui->latenciaMemoriaSpinBox->value (), ui->trasferenciaSpinBox->value (), ui->quatumSpinBox->value ());
 	m_controlador = new Controlador(m_rutas_archivos, datos, this);
 	m_controlador->comenzar_simulacion ();
-}
-
-void MainWindow::terminar_simulacion() {
-	m_controlador->terminar_simulacion ();
 }
 
 void MainWindow::imprimir_estado(const QString &estado) {

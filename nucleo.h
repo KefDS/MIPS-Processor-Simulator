@@ -17,7 +17,7 @@ class Nucleo : public QObject {
 	Q_OBJECT
 
 public:
-	Nucleo (Procesador& procesador, const QString& m_nombre, QObject* parent = 0);
+	Nucleo (Procesador& procesador, int numero_nucleo, QObject* parent = 0);
 	~Nucleo();
 
 signals:
@@ -66,7 +66,7 @@ private:
 
 	// Miembros de la clase
 
-	QString m_nombre;
+	int m_numero_nucleo;
 	Procesador& m_procesador; // Cada núcleo tendrá su propio apuntador a procesador
 	Cache* const m_cache_instrucciones; /**< Representa la cache de instrucciones que posee el núcleo */
 	int* const m_registros;

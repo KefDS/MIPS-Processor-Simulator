@@ -1,8 +1,8 @@
 #include "nucleo.h"
 
-Nucleo::Nucleo (Procesador& procesador, const QString& nombre, QObject* parent) :
+Nucleo::Nucleo (Procesador& procesador,int numero_nucleo, QObject* parent) :
 	QObject (parent),
-	m_nombre(nombre),
+	m_numero_nucleo(numero_nucleo),
 	m_procesador (procesador),
 	m_cache_instrucciones(new Cache()),
 	m_registros(new int[NUMERO_REGISTROS])
@@ -16,13 +16,13 @@ Nucleo::~Nucleo() {
 }
 
 void Nucleo::run() {
-	emit reportar_estado(QString(m_nombre + " empezó su ejecución."));
+	emit reportar_estado (QString("Núcleo %1 inició su ejecución.").arg(m_numero_nucleo));
 
 	// Mientras hayan procesos en la cola
 	while(!m_procesador.cola_vacia()) {
 		Proceso proceso_actual = m_procesador.tomar_proceso();
 		cargar_contexto(proceso_actual);
-		emit reportar_estado(QString(m_nombre + " va a ejecutar el hilo con PID %1.").arg(proceso_actual.pid));
+		emit reportar_estado(QString("El núcleo %1 va a ejecutar el hilo con PID %2.").arg(m_numero_nucleo).arg(proceso_actual.pid));
 
 		m_quantum_de_proceso_actual = m_procesador.obtener_quatum();
 
@@ -32,7 +32,7 @@ void Nucleo::run() {
 			Instruccion instruccion = obtiene_instruccion();
 			termino_hilo = ejecutar_instruccion(instruccion);
 			--m_quantum_de_proceso_actual;
-            m_procesador.aumentar_reloj();
+			m_procesador.aumentar_reloj();
 		}
 
 		// Si el hilo no ha terminado, se envía a la cola de procesos de nuevo
@@ -42,9 +42,9 @@ void Nucleo::run() {
 		}
 	}
 
-    m_procesador.fin_nucleo();
+	m_procesador.fin_nucleo();
 
-	emit reportar_estado (QString(m_nombre + " terminó su ejecución."));
+	emit reportar_estado (QString("Núcleo %1 terminó su ejecución.").arg(m_numero_nucleo));
 }
 
 void Nucleo::cargar_contexto(const Proceso& proceso) {
@@ -62,10 +62,13 @@ void Nucleo::guardar_contexto(Proceso& proceso) const {
 bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 	bool es_instruccion_fin = false;
 
-    m_registros[PC] += NUMERO_BYTES_PALABRA;
+	// Mueve el PC hacia la siguiente instrucción
+	m_registros[PC] += NUMERO_BYTES_PALABRA;
 
 	// Pruebas
 	qDebug() << "Instruccion actual: " << instruccion.celda[0] << " , " << instruccion.celda[1] << " , " << instruccion.celda[2] << " , " << instruccion.celda[3];
+	// Pruebas
+	qDebug() << "---------------------------------------------------------";
 
 	// Código de operación
 	switch (instruccion.celda[0]) {
@@ -91,23 +94,23 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 
 		case BEQZ:
 			if(m_registros[instruccion.celda[1]] == 0) {
-                m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
-            }
+				m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
+			}
 			break;
 
 		case BNEZ:
 			if(m_registros[instruccion.celda[1]] != 0) {
-                m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
-            }
+				m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
+			}
 			break;
 
 		case JAL:
-            m_registros[31] = m_registros[PC];
-            m_registros[PC] += instruccion.celda[3];
+			m_registros[31] = m_registros[PC];
+			m_registros[PC] += instruccion.celda[3];
 			break;
 
 		case JR:
-            m_registros[PC] = m_registros[instruccion.celda[1]];
+			m_registros[PC] = m_registros[instruccion.celda[1]];
 			break;
 
 		case FIN:
@@ -118,9 +121,6 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 		default:
 			emit reportar_estado (QString("La instrucción %1 no es válida para esta simulación, por favor presione terminar simulación.").arg(instruccion.celda[0]));
 	};
-
-	// Pruebas
-	qDebug() << "---------------------------------------------------------";
 
 	return es_instruccion_fin;
 }
@@ -135,8 +135,9 @@ Instruccion Nucleo::obtiene_instruccion() {
 	// El bloque no está en caché
 	if (numero_de_bloque != m_cache_instrucciones->identificador_de_bloque_memoria[indice]) {
 
+		// Debe esperar mientras el bus no esté disponible
 		while(!m_procesador.bus_de_memoria_instrucciones_libre()) {
-            m_procesador.aumentar_reloj();
+			m_procesador.aumentar_reloj();
 		}
 
 		// Se pide el bloque a memoria prinicipal
@@ -144,9 +145,9 @@ Instruccion Nucleo::obtiene_instruccion() {
 		m_cache_instrucciones->identificador_de_bloque_memoria[indice] = numero_de_bloque;
 
 		// Aquí se da el retraso de tiempo en el cual se debe ir a memoria a traer un bloque.
-        int tiempo_de_espera = m_procesador.obtener_duracion_traer_bloque_cache_instrucciones();
+		int tiempo_de_espera = m_procesador.obtener_duracion_transferencia_memoria_a_cache_instrucciones();
 		for(int i = 0; i < tiempo_de_espera; ++i) {
-            m_procesador.aumentar_reloj();
+			m_procesador.aumentar_reloj();
 		}
 
 		m_procesador.liberar_bus_de_memoria_instrucciones();

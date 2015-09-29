@@ -1,8 +1,6 @@
 #ifndef CONTROLADOR_H
 #define CONTROLADOR_H
 
-#include <QDebug>
-
 #include "definiciones.h"
 #include "nucleo.h"
 #include <QObject>
@@ -38,18 +36,12 @@ public:
 	*/
 	void comenzar_simulacion();
 
-	/**
-	 * @brief terminar_simulacion
-	 * Este método termina la ejecucción de los threads.
-	 */
-	void terminar_simulacion();
-
 signals:
 	void enviar_estado(const QString& estado);
 
 private:
-	QThread m_thread_nucleo_1; /**< QThread que contendrá el núcleo 0 */
-	QThread m_thread_nucleo_2; /**< QThread que contendrá el núcleo 1 */
-	Procesador* const m_procesador; /**< Esta variable tendrá los recursos críticos que deben compartir los núcleos */
+	QThread m_thread_nucleo_0;		/**< QThread que contendrá el núcleo 0 */
+	QThread m_thread_nucleo_1;		/**< QThread que contendrá el núcleo 1 */
+	Procesador* const m_procesador;	/**< Esta variable tendrá los recursos críticos que deben compartir los núcleos */
 };
 #endif // CONTROLADOR_H

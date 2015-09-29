@@ -128,13 +128,6 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="terminarSimlacionButton">
-            <property name="text">
-             <string>Terminar Simulación</string>
-            </property>
-           </widget>
-          </item>
          </layout>
         </item>
        </layout>

@@ -33,7 +33,7 @@ public:
 	// Métodos
 
 	/**
-    * @brief cola_vacia.
+	* @brief cola_vacia.
 	* Verifica sí la cola de procesos está vacía.
 	* @return true si la cola esta vacía. false en caso contrario.
 	*/
@@ -61,21 +61,21 @@ public:
 	 */
 	int obtener_quatum() const;
 
-    /**
-     * @brief obtener_duracion_traer_bloque_cache_instrucciones
-     * @return Obtiene el tiempo que dura la máquina en traer y/o guardar
-     * un (datos) o varios (instrucciones) bloques entre la caché y memoria.
-     */
-    int obtener_duracion_traer_bloque_cache_instrucciones() const;
+	/**
+	 * @brief obtener_duracion_traer_bloque_cache_instrucciones
+	 * @return Obtiene el tiempo que dura la máquina en traer y/o guardar
+	 * un (datos) o varios (instrucciones) bloques entre la caché y memoria.
+	 */
+	int obtener_duracion_transferencia_memoria_a_cache_instrucciones() const;
 
 	/**
 	 * @brief obtener_bloque
 	 * Envía una copia del bloque deseado que de
 	 * la memoria principal.
 	 * @param numero_bloque que se desea la memoria
-	 * @return Copia de bloque pedido.
+	 * @return Copia del bloque pedido.
 	 */
-    Bloque obtener_bloque(int numero_bloque) const;
+	Bloque obtener_bloque(int numero_bloque) const;
 
 	/**
 	 * @brief bus_de_memoria_instrucciones_libre
@@ -100,16 +100,16 @@ public:
 	 */
 	void aumentar_reloj();
 
-    /**
-     * @brief fin_nucleo
-     * Este método modifica variable que son utilizadoas en la barrera
-     * para evitar el bloque permanente del otro núcleo.
-     */
-    void fin_nucleo();
+	/**
+	 * @brief fin_nucleo
+	 * Este método modifica variable que son utilizadoas en la barrera
+	 * para evitar el bloque permanente del otro núcleo.
+	 */
+	void fin_nucleo();
 
 private:
 	const int m_quantum;
-    const int m_duracion_de_traer_bloque_a_memoria_cache_instrucciones;
+	const int m_duracion_transferencia_memoria_a_cache_instrucciones;
 
 	int* const m_memoria_instrucciones;		/**< Memoria donde se encontrarán las instrucciones de los hilos */
 
@@ -120,12 +120,12 @@ private:
 	QMutex m_mutex_cola_procesos;			/**< Mutex que se encarga de sincronizar la lectura y escritura de la cola de procesos */
 
 	// Para el aumentar el reloj
-    int m_numero_de_nucleos;
-	int m_reloj;
+	int m_numero_de_nucleos;				/**< Tiene un contador de los números de núcleos que acceden a sus recursos */
+	int m_reloj;							/**< Reloj del la máquina. Con él se simula la sincronización de hilos */
 	int m_cuenta;
-    QMutex m_mutex_numero_de_nucleos;
+	QMutex m_mutex_numero_de_nucleos;
 	QMutex m_mutex_barrera;					/**< Mutex que se encarga de sincronizar el aumento del reloj del sistema */
-	QWaitCondition m_condicion;
+	QWaitCondition m_condicion;				/**< Los núcleos se quedan bloqueados con esta condición hasta que uno los deesbloquee */
 
 
 	// Variables auxiliares
@@ -133,7 +133,7 @@ private:
 	// Esta variable tendrá la posición libre de la memoria de instrucciones
 	int m_indice_memoria_instrucciones;
 
-    // Contador para asignar los PID a los hilos
+	// Contador para asignar los PID a los hilos
 	int m_pid;
 };
 #endif // PROCESADOR_H
