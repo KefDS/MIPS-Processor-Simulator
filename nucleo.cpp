@@ -40,6 +40,15 @@ void Nucleo::run() {
 			guardar_contexto(proceso_actual);
 			m_procesador.encolar_proceso(proceso_actual);
 		}
+        /*
+        else
+        {
+            for(int i=0; i<NUMERO_REGISTROS; i++)
+            {
+                qDebug() << "Registro " << i << " vale " << m_registros[i];
+            }
+        }
+        */
 	}
 
 	m_procesador.fin_nucleo();
@@ -74,43 +83,76 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 	switch (instruccion.celda[0]) {
 		case DADDI:
 			m_registros[instruccion.celda[2]] = m_registros[instruccion.celda[1]] + instruccion.celda[3];
+            /*
+            qDebug() << "DADDI, se sumo " << instruccion.celda[3] << " con el registro[" << instruccion.celda[1] << "] que es " << m_registros[instruccion.celda[1]] <<
+                     " y dio " << m_registros[instruccion.celda[2]] << " en el registro" << instruccion.celda[2];
+            */
 			break;
 
 		case DADD:
 			m_registros[instruccion.celda[3]] = m_registros[instruccion.celda[1]] + m_registros[instruccion.celda[2]];
+            /*
+            qDebug() << "DADD, se sumo el registro[" << instruccion.celda[1] << "] que es " << m_registros[instruccion.celda[1]] << " con el registro[" << instruccion.celda[2] << "] que es " << m_registros[instruccion.celda[2]] <<
+                     " y dio " << m_registros[instruccion.celda[3]]<< " en el registro" << instruccion.celda[3];
+            */
+
 			break;
 
 		case DSUB:
 			m_registros[instruccion.celda[3]] = m_registros[instruccion.celda[1]] - m_registros[instruccion.celda[2]];
+            /*
+            qDebug() << "DSUB, se resto el registro[" << instruccion.celda[1] << "] que es " << m_registros[instruccion.celda[1]] << " con el registro[" << instruccion.celda[2] << "] que es " << m_registros[instruccion.celda[2]] <<
+                     " y dio " << m_registros[instruccion.celda[3]]<< " en el registro" << instruccion.celda[3];
+            */
 			break;
 
 		case DMUL:
 			m_registros[instruccion.celda[3]] = m_registros[instruccion.celda[1]] * m_registros[instruccion.celda[2]];
+            /*
+            qDebug() << "DMUL, se multiplico el registro[" << instruccion.celda[1] << "] que es " << m_registros[instruccion.celda[1]] << " con el registro[" << instruccion.celda[2] << "] que es " << m_registros[instruccion.celda[2]] <<
+                     " y dio " << m_registros[instruccion.celda[3]]<< " en el registro" << instruccion.celda[3];
+            */
 			break;
 
 		case DDIV:
 			m_registros[instruccion.celda[3]] = m_registros[instruccion.celda[1]] / m_registros[instruccion.celda[2]];
+            /*
+            qDebug() << "DDIV, se dividio el registro[" << instruccion.celda[1] << "] que es " << m_registros[instruccion.celda[1]] << " con el registro[" << instruccion.celda[2] << "] que es " << m_registros[instruccion.celda[2]] <<
+                     " y dio " << m_registros[instruccion.celda[3]]<< " en el registro" << instruccion.celda[3];
+            */
 			break;
 
 		case BEQZ:
 			if(m_registros[instruccion.celda[1]] == 0) {
 				m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
 			}
-			break;
+            /*
+            qDebug() << "salto si el registro " << instruccion.celda[1] << " que es " << m_registros[instruccion.celda[1]] << " es 0";
+            */
+            break;
 
 		case BNEZ:
 			if(m_registros[instruccion.celda[1]] != 0) {
 				m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
 			}
-			break;
+            /*
+            qDebug() << "salto si el registro " << instruccion.celda[1] << " que es " << m_registros[instruccion.celda[1]] << " NO es 0";
+            */
+            break;
 
 		case JAL:
 			m_registros[31] = m_registros[PC];
 			m_registros[PC] += instruccion.celda[3];
+            /*
+            qDebug() << "Guardo en el registro 31 PC que es " << m_registros[PC] << " y salto a " << m_registros[PC] + instruccion.celda[3];
+            */
 			break;
 
 		case JR:
-			m_registros[PC] = m_registros[instruccion.celda[1]];
+            m_registros[PC] = m_registros[instruccion.celda[1]];
+             /*
+             qDebug() << "Pongo en PC lo que esta en el registro " << instruccion.celda[1] << " que es " <<instruccion.celda[1];
+            */
 			break;
 
 		case FIN:
