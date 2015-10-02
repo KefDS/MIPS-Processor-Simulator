@@ -33,6 +33,13 @@ void Nucleo::run() {
 			termino_hilo = ejecutar_instruccion(instruccion);
 			--m_quantum_de_proceso_actual;
 			m_procesador.aumentar_reloj();
+
+            // Imprimir estatus después del ciclo de reloj
+            QString resumen (QString("Núcleo %1. Registros: ").arg(m_numero_nucleo));
+            for (int i = 0; i < NUMERO_REGISTROS; ++i) {
+                resumen.append(QString("[%1] : %2, ").arg(i).arg(m_registros[i]));
+            }
+            emit reportar_estado(resumen);
 		}
 
 		// Si el hilo no ha terminado, se envía a la cola de procesos de nuevo
@@ -64,11 +71,6 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 
 	// Mueve el PC hacia la siguiente instrucción
 	m_registros[PC] += NUMERO_BYTES_PALABRA;
-
-	// Pruebas
-	qDebug() << "Instruccion actual: " << instruccion.celda[0] << " , " << instruccion.celda[1] << " , " << instruccion.celda[2] << " , " << instruccion.celda[3];
-	// Pruebas
-	qDebug() << "---------------------------------------------------------";
 
 	// Código de operación
 	switch (instruccion.celda[0]) {
@@ -138,6 +140,7 @@ Instruccion Nucleo::obtiene_instruccion() {
 		// Debe esperar mientras el bus no esté disponible
 		while(!m_procesador.bus_de_memoria_instrucciones_libre()) {
 			m_procesador.aumentar_reloj();
+           emit reportar_estado(QString("Núcleo %1 está esperando a que se desocupe el bus de datos").arg(m_numero_nucleo));
 		}
 
 		// Se pide el bloque a memoria prinicipal
@@ -148,6 +151,7 @@ Instruccion Nucleo::obtiene_instruccion() {
 		int tiempo_de_espera = m_procesador.obtener_duracion_transferencia_memoria_a_cache_instrucciones();
 		for(int i = 0; i < tiempo_de_espera; ++i) {
 			m_procesador.aumentar_reloj();
+            emit reportar_estado(QString("Núcleo %1 está ocupando el bus de datos").arg(m_numero_nucleo));
 		}
 
 		m_procesador.liberar_bus_de_memoria_instrucciones();

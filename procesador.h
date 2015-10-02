@@ -11,6 +11,7 @@
 #include <QQueue>
 #include <QReadWriteLock>
 #include <QTextStream>
+#include <QThread>
 #include <QWaitCondition>
 
 /**

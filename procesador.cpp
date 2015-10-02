@@ -88,9 +88,9 @@ void Procesador::aumentar_reloj() {
 		++m_reloj;
 		m_cuenta = m_numero_de_nucleos;
 		m_condicion.wakeAll();
-		qDebug() << "Se aumentó reloj" << m_reloj;
 	}
 	m_mutex_barrera.unlock();
+    QThread::usleep(100);
 }
 
 void Procesador::fin_nucleo() {
