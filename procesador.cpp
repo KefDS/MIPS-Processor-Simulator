@@ -86,6 +86,7 @@ void Procesador::aumentar_reloj() {
 	}
 	else {
 		++m_reloj;
+		qDebug() << "El valor del reloj es de: " << m_reloj;
 		m_cuenta = m_numero_de_nucleos;
 		m_condicion.wakeAll();
 	}
