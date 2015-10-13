@@ -7,11 +7,10 @@
 #include <QString>
 
 /**
- * @brief Nucleo class
- * Esta clase representa un núcleo de un microporcesador MIPS.
+ * @brief Esta clase representa un núcleo de un microporcesador MIPS.
  *
  * @author	Kevin Delgado Sandí	(kefdelgado@gmail.com).
- *			Jean Carlo Zuñiga	(jeanczm@gmail.com).
+ * @author	Jean Carlo Zuñiga	(jeanczm@gmail.com).
  */
 class Nucleo : public QObject {
 	Q_OBJECT
@@ -32,8 +31,8 @@ private:
 
 	/**
 	* @brief cargar_contexto
-	* Toma un proceso de la cola y coloca sus valores en los registros del núcleo.
-	* @param proceso al que se quiere ejecutar en el núcleo.
+	* Toma el contexto de un proceso de la cola y coloca sus valores en los registros del núcleo.
+	* @param contexto de un proceso al que se quiere ejecutar en el núcleo.
 	*/
 	void cargar_contexto(const Proceso& proceso);
 
@@ -49,7 +48,7 @@ private:
 	 * @brief ejecutar_instruccion
 	 * Toma la instruccion y la ejecuta. Modifica PC para que apunte a la nueva dirección.
 	 * @param instruccion a ser ejecutada.
-	 * @return true si es la instruccion 'FIN', false en caso contrario.
+	 * @return @c true si es la instruccion @c FIN, @c false en caso contrario.
 	 */
 	bool ejecutar_instruccion(const Instruccion& instruccion);
 

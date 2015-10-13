@@ -9,17 +9,15 @@
 #include "procesador.h"
 
 /**
- * @class Controlador
- *
  * @brief Calse controladora de la simulación.
  *
  *	Esta clase contiene los Qthreads que se encargarán de
- * hacer correr los núcleos. Además tiene procesador, el cual
+ * hacer correr los núcleos. Además tiene @see procesador, el cual
  * contiene los recursos críticos que los núcleos necesitan
  * para realizar su tarea.
  *
  * @author	Kevin Delgado Sandí	(kefdelgado@gmail.com).
- *			Jean Carlo Zuñiga	(jeanczm@gmail.com).
+ * @author	Jean Carlo Zuñiga	(jeanczm@gmail.com).
  */
 class Controlador : public QObject {
 	Q_OBJECT

@@ -1,8 +1,6 @@
 #ifndef DEFINICIONES
 #define DEFINICIONES
 
-#include <QDebug>
-
 // Definiciones
 #define NUMERO_BYTES_PALABRA 4
 #define NUMERO_PALABRAS_BLOQUE 4
@@ -33,8 +31,7 @@
 // Estructuras
 
 /**
- * @brief Datos_usuario struct
- * Estructura que contendrá las variable que el usuario digite
+ * @brief Estructura que contendrá las variable que el usuario digite
  * con respecto a tiempo de duración al realizar una actividad.
  */
 struct Datos_usuario {
@@ -53,8 +50,7 @@ struct Datos_usuario {
 
 
 /**
- * @brief Proceso struct
- * Esta estructura define un proceso que debe esperar en la cola de procesos
+ * @brief Esta estructura define un proceso que debe esperar en la cola de procesos
  * hasta ser ubicado en un núcleo para su ejecucción.
  */
 struct Proceso {
@@ -71,39 +67,27 @@ struct Proceso {
 
 
 /**
- * @brief Palabra struct
- * Representa la unidad lógica de palabra
+ * @brief Representa la unidad lógica de palabra.
  */
 struct Palabra {
 	int celda[NUMERO_BYTES_PALABRA];
 };
 
 
-/** Para evitar confusiones se utilizará la frase Instruccion cuando lo que se quiere es una instruccion y no una palabra */
+/**< Para evitar confusiones se utilizará la frase Instruccion cuando lo que se quiere es una instruccion y no una palabra */
 typedef Palabra Instruccion;
 
 
 /**
- * @brief Bloque struct
- * Representa la unidad lógica de bloque.
+ * @brief Representa la unidad lógica de bloque.
  */
 struct Bloque {
 	Palabra palabra[NUMERO_PALABRAS_BLOQUE];
-
-	void print() {
-		for (int i = 0; i < 4; ++i) {
-			qDebug() << "Palabra[" << i << "] = ";
-			for (int j = 0; j < 4; ++j) {
-				qDebug() << "Celda[" << j << "] = " << palabra[i].celda[j];
-			}
-		}
-	}
 };
 
 
 /**
- * @brief Cache struct
- * Representa una caché de instrucciones y le pertenece a un núcleo.
+ * @brief Representa una caché de instrucciones y le pertenece a un núcleo.
  */
 struct Cache {
 	Bloque bloques[NUMERO_BLOQUES_CACHE];

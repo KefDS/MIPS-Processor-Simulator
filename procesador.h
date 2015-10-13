@@ -15,13 +15,14 @@
 #include <QWaitCondition>
 
 /**
- * @brief Procesador class
- * Esta clase es una abstracón de los recursos a los cuáles los núcleos deben
- * acceder para completar su labor. Los miembros de esta clase son
- * recursos críticos, ya que ambos núcleos deben acceder a él.
+ * @brief Esta clase es una abstracón de los recursos a los cuáles los núcleos deben
+ * acceder para completar su labor.
+ *
+ * Los miembros de esta clase son recursos críticos, ya que ambos núcleos deben acceder a él.
+ * Los recursos críticos de esta clase son controlados por medio de mutex.
  *
  * @author	Kevin Delgado Sandí	(kefdelgado@gmail.com).
- *			Jean Carlo Zuñiga	(jeanczm@gmail.com).
+ * @author	Jean Carlo Zuñiga	(jeanczm@gmail.com).
  */
 class Procesador : public QObject {
 	Q_OBJECT
@@ -34,77 +35,72 @@ public:
 	// Métodos
 
 	/**
-	* @brief cola_vacia.
-	* Verifica sí la cola de procesos está vacía.
+	* @brief Verifica sí la cola de procesos está vacía.
 	* @return true si la cola esta vacía. false en caso contrario.
 	*/
 	bool cola_vacia();
 
 	/**
-	* @brief tomarProceso
-	* Esta clase toma un proceso de la cola de procesos y quita el procesos de la cola.
+	* @brief Toma el contexto de un proceso de la cola de procesos.
+	*
+	* Cuando toma el contexto, desaparece de la cola de procesos.
+	*
 	* @return Primer proceso en la cola.
 	*/
 	Proceso tomar_proceso();
 
 	/**
-	 * @brief encolar_proceso
-	 * Toma el contexto de proceso que le envía el núcleo
+	 * @brief Toma el contexto de un proceso que le envía el núcleo
 	 * y lo encola en la cola de procesos.
 	 * @param proceso_a_encolar contexto de proceso a encolar.
 	 */
 	void encolar_proceso(const Proceso& proceso_a_encolar);
 
 	/**
-	 * @brief obtener_quatum
-	 * Le devuleve el quatum que digitó el usuario.
+	 * @brief Devuleve el quatum que digitó el usuario.
 	 * @return quatum que digitó el usuario.
 	 */
 	int obtener_quatum() const;
 
 	/**
-	 * @brief obtener_duracion_traer_bloque_cache_instrucciones
+	 * @brief Obtiene la duración de trasferencia en tomar un bloque de
+	 * memoria y copiarla en memoria cache y viceversa.
 	 * @return Obtiene el tiempo que dura la máquina en traer y/o guardar
 	 * un (datos) o varios (instrucciones) bloques entre la caché y memoria.
 	 */
 	int obtener_duracion_transferencia_memoria_a_cache_instrucciones() const;
 
 	/**
-	 * @brief obtener_bloque
-	 * Envía una copia del bloque deseado que de
-	 * la memoria principal.
-	 * @param numero_bloque que se desea la memoria
+	 * @brief Se obtiene una copia del bloque deseado de memoria principal.
+	 * @param numero_bloque que se desea obtener de la memoria.
 	 * @return Copia del bloque pedido.
 	 */
 	Bloque obtener_bloque(int numero_bloque) const;
 
 	/**
-	 * @brief bus_de_memoria_instrucciones_libre
-	 * Intenta tomar el bus de datos sí este esta libre.
-	 * Si ya esta haciendo ocupado por otra cache, devuelve
-	 * un resultado negativo.
-	 * @return true si pudo obtener acceso al bus, falso en caso contrario.
+	 * @brief Intenta tomar el bus de datos si este se encuentra libre.
+	 * Si ya esta haciendo ocupado por otra cache, devuelve un resultado negativo.
+	 * @return @c true si pudo obtener acceso al bus, @c falso en caso contrario.
 	 */
 	bool bus_de_memoria_instrucciones_libre();
 
 	/**
-	 * @brief liberar_bus_de_memoria_instrucciones
-	 * Libera el bus que va a la memoria de instrucciones.
+	 * @brief Libera el bus que va a la memoria de instrucciones.
 	 */
 	void liberar_bus_de_memoria_instrucciones();
 
 	/**
-	 * @brief aumentar_reloj
-	 * Este método espera a que todos lo núcleos llamen a esta método
-	 * para poder aumentar el reloj, para de esa manera tener sincronizado
-	 * los núcleos.
+	 * @brief Barrera para sincronizar la ejecucción de los núcleos.
+	 *
+	 * Espera a que todos lo núcleos llamen a esta método para poder
+	 * aumentar el reloj. Con esta barrera se garantiza la ejecucción
+	 * sincronizada de los núcleos.
 	 */
 	void aumentar_reloj();
 
 	/**
-	 * @brief fin_nucleo
-	 * Este método modifica variable que son utilizadoas en la barrera
-	 * para evitar el bloque permanente del otro núcleo.
+	 * @brief Modifica las variables que son utilizadas en la barrera
+	 * para evitar el bloque permanente de los demás núcleos.
 	 */
 	void fin_nucleo();
 
