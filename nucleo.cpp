@@ -1,6 +1,6 @@
 #include "nucleo.h"
 
-Nucleo::Nucleo (Procesador& procesador,int numero_nucleo, QObject* parent) :
+Nucleo::Nucleo (Procesador& procesador, int numero_nucleo, QObject* parent) :
 	QObject (parent),
 	m_numero_nucleo(numero_nucleo),
 	m_procesador (procesador),
@@ -94,6 +94,14 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 			m_registros[instruccion.celda[3]] = m_registros[instruccion.celda[1]] / m_registros[instruccion.celda[2]];
 			break;
 
+		case LW:
+			// @todo LW
+			break;
+
+		case SW:
+			// @todo SW
+			break;
+
 		case BEQZ:
 			if(m_registros[instruccion.celda[1]] == 0) {
 				m_registros[PC] += instruccion.celda[3] * NUMERO_BYTES_PALABRA;
@@ -113,6 +121,14 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 
 		case JR:
 			m_registros[PC] = m_registros[instruccion.celda[1]];
+			break;
+
+		case LL:
+			// @todo LL
+			break;
+
+		case SC:
+			// @todo SC
 			break;
 
 		case FIN:

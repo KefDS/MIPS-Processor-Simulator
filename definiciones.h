@@ -24,7 +24,8 @@
 #define BNEZ	5
 #define JAL		3
 #define JR		2
-
+#define LL		50
+#define SC		51
 #define FIN		63
 
 
