@@ -5,14 +5,19 @@
 #define NUMERO_BYTES_PALABRA 4
 #define NUMERO_PALABRAS_BLOQUE 4
 #define NUMERO_BLOQUES_INSTRUCCIONES 40
+#define NUMERO_BLOQUES_DATOS 88
 #define NUMERO_BLOQUES_CACHE 8
 #define NUMERO_BYTES_MEMORIA_INSTRUCCIONES	NUMERO_BYTES_PALABRA * NUMERO_PALABRAS_BLOQUE * NUMERO_BLOQUES_INSTRUCCIONES
 #define NUMERO_NUCLEOS 2
 
-#define NUMERO_REGISTROS 33 // 32 registros + PC
+#define NUMERO_REGISTROS 34 // 32 registros + PC + RL
 #define PC 32
+#define RL 33
 
-// Codigos de operacion
+// Representa los estados en la que puede estar la caché
+enum class ESTADO { COMPARTIDO, MODIFICADO, INVALIDO };
+
+// Códigos de operación
 #define DADDI	8
 #define DADD	32
 #define DSUB	34
@@ -93,11 +98,12 @@ struct Bloque {
 struct Cache {
 	Bloque bloques[NUMERO_BLOQUES_CACHE];
 	int identificador_de_bloque_memoria[NUMERO_BLOQUES_CACHE];
+	ESTADO estado_del_bloque[NUMERO_BLOQUES_CACHE]; /**< Esta variable de instancia la utiliza la caché de datos */
 
 	Cache() {
 		for (int i = 0; i < NUMERO_BLOQUES_CACHE; ++i) {
-			// Inválido
 			identificador_de_bloque_memoria[i] = -1;
+			estado_del_bloque[i] = ESTADO::INVALIDO;
 		}
 	}
 };

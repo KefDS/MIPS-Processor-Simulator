@@ -147,7 +147,7 @@ Instruccion Nucleo::obtiene_instruccion() {
 	int numero_de_bloque = m_registros[PC] / 16;
 	int numero_de_palabra = (m_registros[PC] % 16) / NUMERO_PALABRAS_BLOQUE;
 
-	// índice donde se debería encontrar el bloque en cahé si estuviera
+	// índice donde se debería encontrar el bloque en caché si estuviera
 	int indice = numero_de_bloque % NUMERO_BLOQUES_CACHE;
 
 	// El bloque no está en caché
