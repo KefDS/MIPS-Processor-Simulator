@@ -109,20 +109,25 @@ private:
 	const int m_duracion_transferencia_memoria_a_cache_instrucciones;
 
 	int* const m_memoria_instrucciones;		/**< Memoria donde se encontrarán las instrucciones de los hilos */
+	int* const m_memoria_datos;				/**< @todo puede que la memeoria de datos sea un struct. Memoria donde se encontrarán los datos que necesitarán los hilos */
 
 	QQueue<Proceso> m_cola_procesos;		/** Cola que contrendrá a los hilos */
 
 	// Mutex para los recursos compartidos
 	QMutex m_mutex_memoria_instrucciones;	/**< Mutex que se encarga de sincronizar la lectura y escritura de la memoria de instrucciones */
 	QMutex m_mutex_cola_procesos;			/**< Mutex que se encarga de sincronizar la lectura y escritura de la cola de procesos */
+	QMutex m_mutex_bus_cache_datos;			/**< Mutex que se encarga de simular el bus que tiene las caches para hacer snooping */
 
 	// Para el aumentar el reloj
 	int m_numero_de_nucleos;				/**< Tiene un contador de los números de núcleos que acceden a sus recursos */
-	int m_reloj;							/**< Reloj del la máquina. Con él se simula la sincronización de hilos */
+	long m_reloj;							/**< Reloj del la máquina. Con él se simula la sincronización de hilos */
 	int m_cuenta;
 	QMutex m_mutex_numero_de_nucleos;
 	QMutex m_mutex_barrera;					/**< Mutex que se encarga de sincronizar el aumento del reloj del sistema */
 	QWaitCondition m_condicion;				/**< Los núcleos se quedan bloqueados con esta condición hasta que uno los deesbloquee */
+
+	Cache** const m_cache_datos;			/**< Contendrá las cachés de datos de cada núcleo */
+	QMutex* const m_mutex_cache_datos;		/**< Mutex que se encarga de sincronizar el acceso a cada una de las cachés */
 
 
 	// Variables auxiliares

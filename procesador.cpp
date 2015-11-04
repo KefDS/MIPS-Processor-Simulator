@@ -3,12 +3,15 @@
 Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int trasferencia, int quantum, QObject* parent) :
 	QObject (parent),
 	m_quantum (quantum),
-	m_duracion_transferencia_memoria_a_cache_instrucciones(4 * (2 * trasferencia + latencia_de_memoria) ),
+	m_duracion_transferencia_memoria_a_cache_instrucciones(4 * (2 * trasferencia + latencia_de_memoria)),
 	m_memoria_instrucciones (new int[NUMERO_BYTES_MEMORIA_INSTRUCCIONES]),
+	m_memoria_datos (new int[NUMERO_BYTES_MEMORIA_DATOS]),
 	m_numero_de_nucleos(NUMERO_NUCLEOS),
 	m_reloj(0),
 	m_cuenta(m_numero_de_nucleos),
 	m_indice_memoria_instrucciones(0),
+	m_cache_datos(new Cache*[m_numero_de_nucleos]),
+	m_mutex_cache_datos(new QMutex[m_numero_de_nucleos]),
 	m_pid(0)
 {
 	// Cargar las instrucciones de los archivos a memoria
@@ -34,10 +37,19 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 			m_cola_procesos.enqueue(Proceso(m_pid++, inicio_hilo));
 		}
 	}
+
+	// @todo Inicializar cache de datos
+
+	// Inicializa la caché de datos (¿debe ser responsabilidad de procesador?)
+	for (int i = 0; i < m_numero_de_nucleos; ++i) {
+		m_cache_datos[i] = new Cache();
+	}
 }
 
 Procesador::~Procesador() {
 	delete[] m_memoria_instrucciones;
+	delete[] m_memoria_datos;
+	delete[] m_mutex_cache_datos;
 }
 
 bool Procesador::cola_vacia() {
@@ -100,6 +112,9 @@ void Procesador::fin_nucleo() {
 	--m_cuenta;
 	// Resta la cantidad de núcleos activos
 	--m_numero_de_nucleos;
+
+	// @todo poner la caché de datos en null
+
 	// Despierta a el otro núcleo si este se encontraba bloqueado
 	m_condicion.wakeAll();
 }
