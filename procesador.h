@@ -102,14 +102,17 @@ public:
 	 * @brief Modifica las variables que son utilizadas en la barrera
 	 * para evitar el bloque permanente de los demás núcleos.
 	 */
-	void fin_nucleo();
+    void fin_nucleo(int numero_nucleo);
+
+
+    int obtener_bloque(int numero_bloque, int numero_nucleo);
 
 private:
 	const int m_quantum;
 	const int m_duracion_transferencia_memoria_a_cache_instrucciones;
 
 	int* const m_memoria_instrucciones;		/**< Memoria donde se encontrarán las instrucciones de los hilos */
-	int* const m_memoria_datos;				/**< @todo puede que la memeoria de datos sea un struct. Memoria donde se encontrarán los datos que necesitarán los hilos */
+    int* const m_memoria_datos;				/**< Memoria donde se encontrarán los datos que necesitarán los hilos */
 
 	QQueue<Proceso> m_cola_procesos;		/** Cola que contrendrá a los hilos */
 
@@ -126,8 +129,7 @@ private:
 	QMutex m_mutex_barrera;					/**< Mutex que se encarga de sincronizar el aumento del reloj del sistema */
 	QWaitCondition m_condicion;				/**< Los núcleos se quedan bloqueados con esta condición hasta que uno los deesbloquee */
 
-	Cache** const m_cache_datos;			/**< Contendrá las cachés de datos de cada núcleo */
-	QMutex* const m_mutex_cache_datos;		/**< Mutex que se encarga de sincronizar el acceso a cada una de las cachés */
+    Cache* const m_cache_datos;             /**< Contendrá las cachés de datos de cada núcleo */
 
 
 	// Variables auxiliares

@@ -1,3 +1,5 @@
+#include <QMutex>
+
 #ifndef DEFINICIONES
 #define DEFINICIONES
 
@@ -103,6 +105,7 @@ struct Cache {
 	// Atributos para la caché de datos
 	ESTADO estado_del_bloque[NUMERO_BLOQUES_CACHE];
 	ESTADO estado_del_bloque_siguiente_ciclo_reloj[NUMERO_BLOQUES_CACHE];
+    QMutex mutex;
 
 	Cache() {
 		for (int i = 0; i < NUMERO_BLOQUES_CACHE; ++i) {

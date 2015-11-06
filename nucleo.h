@@ -63,6 +63,13 @@ private:
 	Instruccion obtiene_instruccion();
 
 
+    // LOAD
+    int obtener_dato(int direccion_fisica, int numero_nucleo);
+
+    // STORE
+    void guardar_dato_a_memoria(int direccion_fisica, int dato);
+
+
 	// Miembros de la clase
 
 	int m_numero_nucleo;

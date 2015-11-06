@@ -1,8 +1,8 @@
 #include "procesador.h"
 
 Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int trasferencia, int quantum, QObject* parent) :
-	QObject (parent),
-	m_quantum (quantum),
+    QObject(parent),
+    m_quantum(quantum),
 	m_duracion_transferencia_memoria_a_cache_instrucciones(4 * (2 * trasferencia + latencia_de_memoria)),
 	m_memoria_instrucciones (new int[NUMERO_BYTES_MEMORIA_INSTRUCCIONES]),
 	m_memoria_datos (new int[NUMERO_BYTES_MEMORIA_DATOS]),
@@ -10,8 +10,7 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 	m_reloj(0),
 	m_cuenta(m_numero_de_nucleos),
 	m_indice_memoria_instrucciones(0),
-	m_cache_datos(new Cache*[m_numero_de_nucleos]),
-	m_mutex_cache_datos(new QMutex[m_numero_de_nucleos]),
+    m_cache_datos(new Cache[m_numero_de_nucleos]),
 	m_pid(0)
 {
 	// Cargar las instrucciones de los archivos a memoria
@@ -38,18 +37,16 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 		}
 	}
 
-	// @todo Inicializar cache de datos
-
-	// Inicializa la caché de datos (¿debe ser responsabilidad de procesador?)
-	for (int i = 0; i < m_numero_de_nucleos; ++i) {
-		m_cache_datos[i] = new Cache();
-	}
+    // Se inicializa la memoria de datos en '1', esto para operaciones relacionadas con LL y SC.
+    for (int i = 0; i < NUMERO_BYTES_MEMORIA_DATOS; ++i) {
+        m_memoria_datos[i] = 1;
+    }
 }
 
 Procesador::~Procesador() {
 	delete[] m_memoria_instrucciones;
 	delete[] m_memoria_datos;
-	delete[] m_mutex_cache_datos;
+    delete[] m_cache_datos;
 }
 
 bool Procesador::cola_vacia() {
@@ -106,15 +103,34 @@ void Procesador::aumentar_reloj() {
     QThread::usleep(100);
 }
 
-void Procesador::fin_nucleo() {
+void Procesador::fin_nucleo(int numero_nucleo) {
 	QMutexLocker locker(&m_mutex_numero_de_nucleos);
 	// Se resta del conteo de la barrera
 	--m_cuenta;
 	// Resta la cantidad de núcleos activos
 	--m_numero_de_nucleos;
 
-	// @todo poner la caché de datos en null
+    // @todo administrar la consistencia de la chaché que sale de ejecucción.
 
 	// Despierta a el otro núcleo si este se encontraba bloqueado
-	m_condicion.wakeAll();
+    m_condicion.wakeAll();
+}
+
+int Procesador::obtener_bloque(int numero_bloque, int numero_nucleo)
+{
+    ESTADO etiqueta;
+    int indice = numero_bloque % NUMERO_BLOQUES_CACHE;
+    //Caso 0: está en la caché local
+    if (numero_bloque == m_cache_datos[numero_nucleo].identificador_de_bloque_memoria[indice]) {
+        etiqueta = m_cache_datos[numero_nucleo].estado_del_bloque[indice];
+        if (etiqueta == ESTADO::INVALIDO) {
+            // @todo: ver si está en la otra caché: compartido -> lo trae : modificado/inválido ir a memoria
+        }
+        else {
+            // @todo: ver si mi caché está desbloqueada para devolver el bloque
+        }
+
+    }
+
+    return 0;
 }

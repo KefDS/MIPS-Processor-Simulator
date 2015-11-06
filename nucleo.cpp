@@ -49,7 +49,7 @@ void Nucleo::run() {
 		}
 	}
 
-	m_procesador.fin_nucleo();
+    m_procesador.fin_nucleo(m_numero_nucleo);
 
 	emit reportar_estado (QString("Núcleo %1 terminó su ejecución.").arg(m_numero_nucleo));
 }
@@ -173,6 +173,16 @@ Instruccion Nucleo::obtiene_instruccion() {
 		m_procesador.liberar_bus_de_memoria_instrucciones();
 	}
 
-	return m_cache_instrucciones->bloques[indice].palabra[numero_de_palabra];
+    return m_cache_instrucciones->bloques[indice].palabra[numero_de_palabra];
+}
+
+int Nucleo::obtener_dato(int direccion_fisica, int numero_nucleo)
+{
+    return 0;
+}
+
+void Nucleo::guardar_dato_a_memoria(int direccion_fisica, int dato)
+{
+
 }
 
