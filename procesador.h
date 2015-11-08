@@ -107,6 +107,10 @@ public:
 
     int obtener_bloque(int numero_bloque, int numero_nucleo);
 
+    int cache_remota(int cache_local);
+
+    void liberar_bus_de_memoria_datos();
+
 private:
 	const int m_quantum;
 	const int m_duracion_transferencia_memoria_a_cache_instrucciones;

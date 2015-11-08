@@ -116,20 +116,81 @@ void Procesador::fin_nucleo(int numero_nucleo) {
     m_condicion.wakeAll();
 }
 
+int Procesador::cache_remota(int cache_local)
+{
+    if(cache_local == 1) return 0;
+    else return 1;
+}
+
+void Procesador::liberar_bus_de_memoria_datos()
+{
+    //@ todo: implementar esta lògica para liberar el recurso compartido: bus
+}
+
 int Procesador::obtener_bloque(int numero_bloque, int numero_nucleo)
 {
-    ESTADO etiqueta;
+    ESTADO etiqueta_local, etiqueta_remota;
     int indice = numero_bloque % NUMERO_BLOQUES_CACHE;
-    //Caso 0: está en la caché local
+
+    //Caso 0: el bloque está en la caché local.
     if (numero_bloque == m_cache_datos[numero_nucleo].identificador_de_bloque_memoria[indice]) {
-        etiqueta = m_cache_datos[numero_nucleo].estado_del_bloque[indice];
-        if (etiqueta == ESTADO::INVALIDO) {
-            // @todo: ver si está en la otra caché: compartido -> lo trae : modificado/inválido ir a memoria
+
+        /*
+        Para hacer la línea que sigue yo debo tener un lock para la caché local, pues sino deberìa volver a preguntar cuando tengo
+        el bus pues la otra caché pudo haberla validado inclusive.
+        */
+        // @todo: obtener la cachè local.
+        etiqueta_local = m_cache_datos[numero_nucleo].estado_del_bloque[indice];
+
+        if (etiqueta_local == ESTADO::INVALIDO) {
+
+            // @todo: solicitar el bus.
+
+            // Se pregunta si el bloque está en la otra caché:
+            if(m_cache_datos[cache_remota(numero_nucleo)].identificador_de_bloque_memoria[indice] == numero_bloque){
+
+                // @todo: solicitar la cache remota
+                etiqueta_remota = m_cache_datos[cache_remota(numero_nucleo)].estado_del_bloque[indice];
+
+                switch (etiqueta_remota) {
+                    case ESTADO::COMPARTIDO:
+                        m_cache_datos[numero_nucleo].bloques[indice] = m_cache_datos[cache_remota(numero_nucleo)].bloques[indice];
+                        m_cache_datos[numero_nucleo].estado_del_bloque[indice] = ESTADO::COMPARTIDO;
+                        // @todo: liberar ambos recursos
+                        liberar_bus_de_memoria_datos();
+                        break;
+
+                        //Cason por defecto es para INVALIDO y MODIFICADO
+                    default:
+                          // @todo: fallo cache datos: pondrìa el bloque en la cache remota con la etiqueta "Compartido"
+                         m_cache_datos[numero_nucleo].bloques[indice] = m_cache_datos[cache_remota(numero_nucleo)].bloques[indice];
+                         m_cache_datos[numero_nucleo].estado_del_bloque[indice] = ESTADO::COMPARTIDO;
+                         // @todo: liberar ambos recursos
+                         liberar_bus_de_memoria_datos();
+                }
+            }
+            else
+            {
+                // @todo: fallo de cachè pero solo para la cachè local
+            }
         }
-        else {
+        else
+        {
             // @todo: ver si mi caché está desbloqueada para devolver el bloque
         }
 
+    }
+    else
+    {
+           //CASO 1: el bloque no está en la caché local pero sì està en la caché remota
+           // Se pregunta si el bloque está en la otra caché:
+           if(m_cache_datos[cache_remota(numero_nucleo)].identificador_de_bloque_memoria[indice] == numero_bloque){
+                  //implementar los casos y demàs
+           }
+           else {
+               //CASO 2, el bloque no está en ninguna caché, hay que traerlo de memoria principal.
+               // @todo: fallo de cachè pero solo para la cachè local
+           }
     }
 
     return 0;
