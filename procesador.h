@@ -105,7 +105,7 @@ public:
     void fin_nucleo(int numero_nucleo);
 
 
-    int obtener_bloque(int numero_bloque, int numero_nucleo);
+    int obtener_bloque(bool instruccion, int dato, int numero_bloque, int numero_nucleo);
 
     int cache_remota(int cache_local);
 
