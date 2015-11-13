@@ -68,7 +68,7 @@ public:
 	 * @return Obtiene el tiempo que dura la máquina en traer y/o guardar
 	 * un (datos) o varios (instrucciones) bloques entre la caché y memoria.
 	 */
-	int obtener_duracion_transferencia_memoria_a_cache_instrucciones() const;
+	int obtener_duracion_transferencia_memoria_a_cache() const;
 
 	/**
 	 * @brief Se obtiene una copia del bloque deseado de memoria principal.
@@ -76,6 +76,13 @@ public:
 	 * @return Copia del bloque pedido.
 	 */
 	Bloque obtener_bloque(int numero_bloque) const;
+
+    /**
+     * @brief obtener_bloque_datos
+     * @param numero_bloque
+     * @return
+     */
+    Bloque obtener_bloque_datos(int numero_bloque) const;
 
 	/**
 	 * @brief Intenta tomar el bus de datos si este se encuentra libre.
@@ -113,7 +120,7 @@ public:
 
 private:
 	const int m_quantum;
-	const int m_duracion_transferencia_memoria_a_cache_instrucciones;
+	const int m_duracion_transferencia_memoria_a_cache;
 
 	int* const m_memoria_instrucciones;		/**< Memoria donde se encontrarán las instrucciones de los hilos */
     int* const m_memoria_datos;				/**< Memoria donde se encontrarán los datos que necesitarán los hilos */

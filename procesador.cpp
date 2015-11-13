@@ -3,7 +3,7 @@
 Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memoria, int trasferencia, int quantum, QObject* parent) :
     QObject(parent),
     m_quantum(quantum),
-    m_duracion_transferencia_memoria_a_cache_instrucciones(4 * (2 * trasferencia + latencia_de_memoria)),
+    m_duracion_transferencia_memoria_a_cache(4 * (2 * trasferencia + latencia_de_memoria)),
     m_memoria_instrucciones (new int[NUMERO_BYTES_MEMORIA_INSTRUCCIONES]),
     m_memoria_datos (new int[NUMERO_BYTES_MEMORIA_DATOS]),
     m_numero_de_nucleos(NUMERO_NUCLEOS),
@@ -68,13 +68,20 @@ int Procesador::obtener_quatum() const {
     return m_quantum;
 }
 
-int Procesador::obtener_duracion_transferencia_memoria_a_cache_instrucciones() const {
-    return m_duracion_transferencia_memoria_a_cache_instrucciones;
+int Procesador::obtener_duracion_transferencia_memoria_a_cache() const {
+    return m_duracion_transferencia_memoria_a_cache;
 }
 
 Bloque Procesador::obtener_bloque(int numero_bloque) const {
     // Interpreta la memoria principal como un vector de bloques
     Bloque* tmp = reinterpret_cast<Bloque*>(m_memoria_instrucciones);
+
+    return tmp[numero_bloque];
+}
+
+Bloque Procesador::obtener_bloque_datos(int numero_bloque) const {
+    // Interpreta la memoria principal como un vector de bloques
+    Bloque* tmp = reinterpret_cast<Bloque*>(m_memoria_datos);
 
     return tmp[numero_bloque];
 }
@@ -129,9 +136,16 @@ void Procesador::liberar_bus_de_memoria_datos()
 
 int Procesador::obtener_bloque(bool instruccion, int dato, int numero_bloque, int numero_nucleo)
 {
+    // Cambio de reloj
+    // Cuando tomo bus cambio ciclo tick
+    // Cuando tomo la otra cache tick
+
     ESTADO etiqueta_local, etiqueta_remota;
     int indice = numero_bloque % NUMERO_BLOQUES_CACHE;
     int cache_remota;
+    int tiempo_de_espera = obtener_duracion_transferencia_memoria_a_cache();
+
+    m_cache_datos[numero_nucleo].mutex.lock();
 
     //Caso 0: el bloque está en la caché local.
     if (numero_bloque == m_cache_datos[numero_nucleo].identificador_de_bloque_memoria[indice]) {
@@ -140,48 +154,45 @@ int Procesador::obtener_bloque(bool instruccion, int dato, int numero_bloque, in
         Para hacer la línea que sigue yo debo tener un lock para la caché local, pues sino deberìa volver a preguntar cuando tengo
         el bus pues la otra caché pudo haberla validado inclusive.
         */
-        // @todo: obtener la cachè local.
         etiqueta_local = m_cache_datos[numero_nucleo].estado_del_bloque[indice];
 
         if (etiqueta_local == ESTADO::INVALIDO)
         {
-
             // @todo: solicitar el bus.
 
             for(int cache=0; cache < NUMERO_NUCLEOS; cache++)
             {
                 if(cache != numero_nucleo)
                 {
+                    //Si el bloque esta en la cache remota
                     if(m_cache_datos[cache].identificador_de_bloque_memoria[indice] == numero_bloque)
                     {
-
-                        // @todo: solicitar la cache remota
+                        m_cache_datos[cache].mutex.lock();
                         etiqueta_remota = m_cache_datos[cache].estado_del_bloque[indice];
 
                         switch (etiqueta_remota) {
                         case ESTADO::MODIFICADO:
-                            // @todo: fallo cache datos: pondrìa el bloque en la cache remota con la etiqueta "Compartido"
+                            guardar_en_memoria(m_cache_datos[cache].bloques[indice]);
+                            m_cache_datos[cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
+                            m_cache_datos[numero_nucleo].bloques[indice] = m_cache_datos[cache].bloques[indice];
+                            m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
                             m_cache_datos[numero_nucleo].bloques[indice] = m_cache_datos[cache].bloques[indice];
                             m_cache_datos[numero_nucleo].estado_del_bloque[indice] = ESTADO::COMPARTIDO;
-                            // @todo: liberar ambos recursos
-                            liberar_bus_de_memoria_datos();
 
                         case ESTADO::COMPARTIDO:
                         case ESTADO::INVALIDO :
                             m_cache_datos[numero_nucleo].bloques[indice] = m_cache_datos[cache].bloques[indice];
                             m_cache_datos[numero_nucleo].estado_del_bloque[indice] = ESTADO::COMPARTIDO;
-                            // @todo: liberar ambos recursos
-                            liberar_bus_de_memoria_datos();
-                            break;
 
+                            // Aquí se da el retraso de tiempo en el cual se debe ir a memoria a traer un bloque.
+                            for(int i = 0; i < tiempo_de_espera; ++i) {
+                                aumentar_reloj();
+                                //emit reportar_estado(QString("Núcleo %1 está ocupando el bus de datos").arg(m_numero_nucleo));
+                            }
+                            break;
                         }
                     }
-                    else
-                    {
-                        // @todo: fallo de cachè pero solo para la cachè local
-                    }
                 }
-
             }
         }
         else
@@ -191,16 +202,50 @@ int Procesador::obtener_bloque(bool instruccion, int dato, int numero_bloque, in
     }
     else
     {
-        //CASO 1: el bloque no está en la caché local pero sì està en la caché remota
-        // Se pregunta si el bloque está en la otra caché:
-        if(true){//if(m_cache_datos[cache_remota(numero_nucleo)].identificador_de_bloque_memoria[indice] == numero_bloque){
-            //implementar los casos y demàs
-        }
-        else
+        //CASO 1: el bloque NO está en la caché local pero sì està en la caché remota
+        for(int cache = 0; cache < NUMERO_NUCLEOS; cache++)
         {
-            //CASO 2, el bloque no está en ninguna caché, hay que traerlo de memoria principal.
-            // @todo: fallo de cachè pero solo para la cachè local
+            if(cache != numero_nucleo)
+            {
+                // Se pregunta si el bloque está en la otra caché:
+                if(m_cache_datos[cache].identificador_de_bloque_memoria[indice] == numero_bloque)
+                {
+                    m_cache_datos[cache].mutex.lock();
+                    etiqueta_remota = m_cache_datos[cache].estado_del_bloque[indice];
+
+                    switch (etiqueta_remota) {
+                        case ESTADO::MODIFICADO:
+                        //Procedo como si fuera un fallo de caché
+                        guardar_en_memoria(m_cache_datos[cache].bloques[indice]);
+                        m_cache_datos[cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
+
+                        // Si el bloque que voy a reemplazar está modificado, debo ir a guardarlo
+
+
+                        m_cache_datos[numero_nucleo].bloques[indice] = obtener_bloque_datos(numero_bloque);
+                        m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
+                        m_cache_datos[numero_nucleo].bloques[indice] = numero_bloque;
+                        break;
+
+                    case ESTADO::COMPARTIDO:
+                        //loop que simula bajar a memoria
+                        break;
+
+                    case ESTADO::INVALIDO:
+                        //caso en que està invalida
+                        break;
+                    }
+
+                    //@todo desbloquear caché externa
+                }
+                else
+                {
+                    //CASO 2, el bloque no está en ninguna caché, hay que traerlo de memoria principal.
+                    // @todo: fallo de cachè pero solo para la cachè local
+                }
+            }
         }
     }
+    m_cache_datos[numero_bloque].mutex.unlock();
     return 0;
 }

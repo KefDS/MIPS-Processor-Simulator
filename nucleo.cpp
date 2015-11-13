@@ -164,7 +164,7 @@ Instruccion Nucleo::obtiene_instruccion() {
 		m_cache_instrucciones->identificador_de_bloque_memoria[indice] = numero_de_bloque;
 
 		// Aquí se da el retraso de tiempo en el cual se debe ir a memoria a traer un bloque.
-		int tiempo_de_espera = m_procesador.obtener_duracion_transferencia_memoria_a_cache_instrucciones();
+        int tiempo_de_espera = m_procesador.obtener_duracion_transferencia_memoria_a_cache();
 		for(int i = 0; i < tiempo_de_espera; ++i) {
 			m_procesador.aumentar_reloj();
             emit reportar_estado(QString("Núcleo %1 está ocupando el bus de datos").arg(m_numero_nucleo));
