@@ -160,7 +160,7 @@ Instruccion Nucleo::obtiene_instruccion() {
 		}
 
 		// Se pide el bloque a memoria prinicipal
-		m_cache_instrucciones->bloques[indice] = m_procesador.obtener_bloque(numero_de_bloque);
+		m_cache_instrucciones->bloques[indice] = m_procesador.obtener_bloque_instrucciones(numero_de_bloque);
 		m_cache_instrucciones->identificador_de_bloque_memoria[indice] = numero_de_bloque;
 
 		// Aquí se da el retraso de tiempo en el cual se debe ir a memoria a traer un bloque.

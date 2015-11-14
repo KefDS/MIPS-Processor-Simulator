@@ -75,7 +75,7 @@ public:
 	 * @param numero_bloque que se desea obtener de la memoria.
 	 * @return Copia del bloque pedido.
 	 */
-	Bloque obtener_bloque(int numero_bloque) const;
+	Bloque obtener_bloque_instrucciones(int numero_bloque) const;
 
     /**
      * @brief obtener_bloque_datos
@@ -112,11 +112,19 @@ public:
     void fin_nucleo(int numero_nucleo);
 
 
-    int obtener_bloque(bool instruccion, int dato, int numero_bloque, int numero_nucleo);
+	/**
+	 * @brief Devuelve el bloque pedido a el núcleo solicitante.
+	 *		  Este método se encarga mantener la coherencia de datos
+	 *        entre todas las caché de datos de los núcleos.
+	 * @param numero_bloque numero de bloque que se desea traer.
+	 * @param numero_nucleo numero de núcleo que hace la petición.
+	 * @param store bandera que indica si la instrucción es un *store*.
+	 * @param dato dato que se bedde guardar en case de que sea un *store*.
+	 * @return índice en la caché de datos donde está el bloque.
+	 */
+	int obtener_bloque_cache_datos(int numero_bloque, int numero_nucleo, bool store = false, int dato = 0);
 
-    int cache_remota(int cache_local);
-
-    void liberar_bus_de_memoria_datos();
+	void guardar_bloque_en_memoria_datos(const Bloque& bloque_a_guardar);
 
 private:
 	const int m_quantum;
@@ -134,7 +142,7 @@ private:
 
 	// Para el aumentar el reloj
 	int m_numero_de_nucleos;				/**< Tiene un contador de los números de núcleos que acceden a sus recursos */
-	long m_reloj;							/**< Reloj del la máquina. Con él se simula la sincronización de hilos */
+	unsigned long m_reloj;							/**< Reloj del la máquina. Con él se simula la sincronización de hilos */
 	int m_cuenta;
 	QMutex m_mutex_numero_de_nucleos;
 	QMutex m_mutex_barrera;					/**< Mutex que se encarga de sincronizar el aumento del reloj del sistema */
