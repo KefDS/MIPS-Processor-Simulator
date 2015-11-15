@@ -177,7 +177,12 @@ int Procesador::obtener_bloque_cache_datos(int numero_bloque, int numero_nucleo,
 						aumentar_reloj();
 					}
 					guardar_bloque_en_memoria_datos(m_cache_datos[indice_cache].bloques[indice]);
-					m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
+
+                    if(store){
+                        m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::INVALIDO;
+                    } else {
+                        m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
+                    }
 				}
 
 				m_cache_datos[indice_cache].mutex.unlock();
@@ -189,7 +194,13 @@ int Procesador::obtener_bloque_cache_datos(int numero_bloque, int numero_nucleo,
 		// @todo Guardar en memoria si se le cae encima a un bloque que estaba ahí.
 
 		m_cache_datos[numero_nucleo].bloques[indice] = obtener_bloque_datos(numero_bloque);
-		m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
+
+        if(store){
+            m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::MODIFICADO;
+        } else {
+            m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
+        }
+
 		m_cache_datos[numero_nucleo].identificador_de_bloque_memoria[indice] = numero_bloque;
 
 		// Suelta el bus de datos
