@@ -11,7 +11,7 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
 	m_cuenta(m_numero_de_nucleos),
 	m_indice_memoria_instrucciones(0),
 	m_cache_datos(new Cache[m_numero_de_nucleos]),
-	m_pid(0)
+    m_pid(0)
 {
 	// Cargar las instrucciones de los archivos a memoria
 	for (const auto& nombre_archivo : nombre_archivos) {
@@ -122,20 +122,26 @@ void Procesador::fin_nucleo(int numero_nucleo) {
 	m_condicion.wakeAll();
 }
 
-int Procesador::obtener_bloque_cache_datos(int numero_bloque, int numero_nucleo, bool store, int dato) {
+int Procesador::obtener_bloque_cache_datos(int direccion_fisica, int numero_nucleo, bool store, int dato) {
 	// Notas acerca de cuando cambiar reloj:
 	// Cambio de reloj
 	// Cuando tomo bus cambio ciclo tick
 	// Cuando tomo la otra cache tick
 
+    int numero_bloque = direccion_fisica / 16;
+
+    int palabra_bloque = (numero_bloque % 16)/ NUMERO_BYTES_PALABRA;
+
 	int indice = numero_bloque % NUMERO_BLOQUES_CACHE;
+
+
 
 	// Bloqueo mi propia caché
 	while (!m_cache_datos[numero_nucleo].mutex.tryLock()) {
 		aumentar_reloj();
 	}
 
-	// Caso 0: El bloque está en la caché local. (Si el bloque está como inválido se asume que ¨no está¨).
+    // Caso 0: El bloque está en la caché local. (Si el bloque está como inválido se asume que "no está").
 	if (numero_bloque == m_cache_datos[numero_nucleo].identificador_de_bloque_memoria[indice] &&
 		m_cache_datos[numero_nucleo].estado_del_bloque[indice] != ESTADO::INVALIDO) {
 
@@ -154,6 +160,14 @@ int Procesador::obtener_bloque_cache_datos(int numero_bloque, int numero_nucleo,
 		// Si el bus lo tiene la otra caché y ocupa bloquear mi caché, pasa un deadlock
 		// ¿Cómo soluciono esto?
 
+        while(!m_mutex_bus_cache_datos.tryLock())
+        {
+            m_cache_datos[numero_nucleo].mutex.unlock();
+            aumentar_reloj();
+        }
+        m_cache_datos[numero_nucleo].mutex.lock();
+
+
 		// Tengo el bus, debo esperar un ciclo de reloj
 		aumentar_reloj();
 
@@ -167,7 +181,7 @@ int Procesador::obtener_bloque_cache_datos(int numero_bloque, int numero_nucleo,
 				}
 
 				// Pregunta si el bloque está en la otra caché.
-				// Si la caché foránea está modificada, se guarda en memoria y se le cambia el estado
+                // Si el estado del bloque de la caché foránea está modificada, se guarda en memoria y se le cambia el estado
 				// Cuando está compartida o inválida no se hace nada con ella.
 				if(m_cache_datos[indice_cache].identificador_de_bloque_memoria[indice] == numero_bloque &&
 				   m_cache_datos[indice_cache].estado_del_bloque[indice] == ESTADO::MODIFICADO) {
@@ -180,7 +194,8 @@ int Procesador::obtener_bloque_cache_datos(int numero_bloque, int numero_nucleo,
 
                     if(store){
                         m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::INVALIDO;
-                    } else {
+                    }
+                    else {
                         m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
                     }
 				}
@@ -196,8 +211,10 @@ int Procesador::obtener_bloque_cache_datos(int numero_bloque, int numero_nucleo,
 		m_cache_datos[numero_nucleo].bloques[indice] = obtener_bloque_datos(numero_bloque);
 
         if(store){
+            m_cache_datos[numero_nucleo].bloque_dato[numero_bloque].palabra[palabra_bloque].dato = dato;
             m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::MODIFICADO;
-        } else {
+        }
+        else {
             m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
         }
 

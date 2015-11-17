@@ -82,6 +82,9 @@ struct Palabra {
 	int celda[NUMERO_BYTES_PALABRA];
 };
 
+struct Palabra_dato {
+    int dato;
+};
 
 /**< Para evitar confusiones se utilizará la frase Instruccion cuando lo que se quiere es una instruccion y no una palabra */
 typedef Palabra Instruccion;
@@ -94,15 +97,23 @@ struct Bloque {
 	Palabra palabra[NUMERO_PALABRAS_BLOQUE];
 };
 
+struct Bloque_dato {
+    Palabra_dato palabra[NUMERO_PALABRAS_BLOQUE];
+};
 
 /**
  * @brief Representa una caché de instrucciones y le pertenece a un núcleo.
  */
 struct Cache {
-	Bloque bloques[NUMERO_BLOQUES_CACHE];
+
+    // Atrbutos para caché de datos
+    Bloque bloques[NUMERO_BLOQUES_CACHE];
+
+    // Compartido
 	int identificador_de_bloque_memoria[NUMERO_BLOQUES_CACHE];
 
 	// Atributos para la caché de datos
+    Bloque_dato bloque_dato[NUMERO_BLOQUES_CACHE];
 	ESTADO estado_del_bloque[NUMERO_BLOQUES_CACHE];
 	ESTADO estado_del_bloque_siguiente_ciclo_reloj[NUMERO_BLOQUES_CACHE];
     QMutex mutex;

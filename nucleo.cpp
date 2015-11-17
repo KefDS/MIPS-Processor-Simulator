@@ -98,27 +98,13 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
     case LW:
         // @todo LW
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-        numero_bloque = direccion_dato;
-        while((numero_bloque % 4) != 0)
-        {
-            numero_bloque--;
-        }
-        //Se obtiene el número de bloque.
-        numero_bloque = numero_bloque / 4;
-        m_registros[instruccion.celda[2]] = m_procesador.obtener_bloque_cache_datos(numero_bloque, m_numero_nucleo , false, -1);
+        m_registros[instruccion.celda[2]] = m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo);
         break;
 
     case SW:
         // @todo SW
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-        numero_bloque = direccion_dato;
-        while((numero_bloque % 4) != 0)
-        {
-            numero_bloque--;
-        }
-        //Se obtiene el número de bloque.
-        numero_bloque = numero_bloque / 4;
-        m_procesador.obtener_bloque_cache_datos(numero_bloque, m_numero_nucleo , true, -1);
+        m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
         break;
 
 
@@ -146,31 +132,17 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
     case LL:
         // @todo LL
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-        numero_bloque = direccion_dato;
-        while((numero_bloque % 4) != 0)
-        {
-            numero_bloque--;
-        }
-        //Se obtiene el número de bloque.
-        numero_bloque = numero_bloque / 4;
-        m_registros[instruccion.celda[2]] = m_procesador.obtener_bloque_cache_datos(numero_bloque, m_numero_nucleo , false, -1);
+        m_registros[instruccion.celda[2]] = m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo);
         m_registros[RL] = direccion_dato;
         break;
 
     case SC:
          // @todo SC
          direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-         numero_bloque = direccion_dato;
-         while((numero_bloque % 4) != 0)
-         {
-             numero_bloque--;
+         if(m_registros[RL] == direccion_dato) {
+             m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
          }
-         //Se obtiene el número de bloque.
-         numero_bloque = numero_bloque / 4;
-         if(m_registros[RL] == direccion_dato)
-         {
-             m_procesador.obtener_bloque_cache_datos(numero_bloque, m_numero_nucleo , true, direccion_dato);
-         } else {
+         else {
              m_registros[instruccion.celda[2]] = 0;
          }
          break;
