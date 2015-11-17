@@ -42,6 +42,8 @@ void Nucleo::run() {
             emit reportar_estado(resumen);
         }
 
+        m_registros[RL] = -1;
+
         // Si el hilo no ha terminado, se envía a la cola de procesos de nuevo
         if (!termino_hilo) {
             guardar_contexto(proceso_actual);
@@ -68,7 +70,7 @@ void Nucleo::guardar_contexto(Proceso& proceso) const {
 
 bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
     bool es_instruccion_fin = false;
-    int direccion_dato, numero_bloque;
+    int direccion_dato, numero_bloque, indice;
 
     // Mueve el PC hacia la siguiente instrucción
     m_registros[PC] += NUMERO_BYTES_PALABRA;
@@ -134,11 +136,16 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
         m_registros[instruccion.celda[2]] = m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo);
         m_registros[RL] = direccion_dato;
+
+        m_procesador.guardar_candado_RL(m_numero_nucleo, direccion_dato);
+
+
         break;
 
     case SC:
          // @todo SC
          direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
+         m_registros[RL] = m_procesador.obtener_direccion_candado_RL(m_numero_nucleo);
          if(m_registros[RL] == direccion_dato) {
              m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
          }

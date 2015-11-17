@@ -126,12 +126,19 @@ public:
 
 	void guardar_bloque_en_memoria_datos(const Bloque& bloque_a_guardar);
 
+    void guardar_candado_RL(int numero_nucleo, int direccion_fisica);
+
+    int obtener_bloque_candado_RL(int numero_nucleo);
+
+    int obtener_direccion_candado_RL(int numero_nucleo);
+
 private:
 	const int m_quantum;
 	const int m_duracion_transferencia_memoria_a_cache;
 
 	int* const m_memoria_instrucciones;		/**< Memoria donde se encontrarán las instrucciones de los hilos */
     int* const m_memoria_datos;				/**< Memoria donde se encontrarán los datos que necesitarán los hilos */
+    int* const m_bloques_RL;
 
 	QQueue<Proceso> m_cola_procesos;		/** Cola que contrendrá a los hilos */
 
