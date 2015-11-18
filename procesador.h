@@ -35,7 +35,7 @@ public:
 	// Métodos
 
 	/**
-	* @brief Verifica sí la cola de procesos está vacía.
+    * @brief Verifica si la cola de procesos está vacía.
 	* @return true si la cola esta vacía. false en caso contrario.
 	*/
 	bool cola_vacia();
@@ -75,14 +75,14 @@ public:
 	 * @param numero_bloque que se desea obtener de la memoria.
 	 * @return Copia del bloque pedido.
 	 */
-	Bloque obtener_bloque_instrucciones(int numero_bloque) const;
+    BloqueInstruccion obtener_bloque_instrucciones(int numero_bloque) const;
 
     /**
      * @brief obtener_bloque_datos
      * @param numero_bloque
      * @return
      */
-    Bloque obtener_bloque_datos(int numero_bloque) const;
+    BloqueDato obtener_bloque_datos(int numero_bloque) const;
 
 	/**
 	 * @brief Intenta tomar el bus de datos si este se encuentra libre.
@@ -109,7 +109,7 @@ public:
 	 * @brief Modifica las variables que son utilizadas en la barrera
 	 * para evitar el bloque permanente de los demás núcleos.
 	 */
-    void fin_nucleo(int numero_nucleo);
+    void fin_nucleo();
 
 
 	/**
@@ -124,7 +124,7 @@ public:
 	 */
 	int obtener_bloque_cache_datos(int numero_bloque, int numero_nucleo, bool store = false, int dato = 0);
 
-	void guardar_bloque_en_memoria_datos(const Bloque& bloque_a_guardar);
+    void guardar_bloque_en_memoria_datos(const BloqueInstruccion& bloque_a_guardar);
 
     void guardar_candado_RL(int numero_nucleo, int direccion_fisica);
 
@@ -149,7 +149,7 @@ private:
 
 	// Para el aumentar el reloj
 	int m_numero_de_nucleos;				/**< Tiene un contador de los números de núcleos que acceden a sus recursos */
-	unsigned long m_reloj;							/**< Reloj del la máquina. Con él se simula la sincronización de hilos */
+    unsigned long m_reloj;					/**< Reloj del la máquina. Con él se simula la sincronización de hilos */
 	int m_cuenta;
 	QMutex m_mutex_numero_de_nucleos;
 	QMutex m_mutex_barrera;					/**< Mutex que se encarga de sincronizar el aumento del reloj del sistema */
@@ -165,5 +165,9 @@ private:
 
 	// Contador para asignar los PID a los hilos
 	int m_pid;
+
+
+    // Métodos auxiliares
+    void tomar_bus_cache_datos(int numero_nucleo);
 };
 #endif // PROCESADOR_H

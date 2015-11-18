@@ -73,16 +73,16 @@ int Procesador::obtener_duracion_transferencia_memoria_a_cache() const {
     return m_duracion_transferencia_memoria_a_cache;
 }
 
-Bloque Procesador::obtener_bloque_instrucciones(int numero_bloque) const {
+BloqueInstruccion Procesador::obtener_bloque_instrucciones(int numero_bloque) const {
     // Interpreta la memoria principal como un vector de bloques
-    Bloque* tmp = reinterpret_cast<Bloque*>(m_memoria_instrucciones);
+    BloqueInstruccion* tmp = reinterpret_cast<BloqueInstruccion*>(m_memoria_instrucciones);
 
     return tmp[numero_bloque];
 }
 
-Bloque Procesador::obtener_bloque_datos(int numero_bloque) const {
+BloqueDato Procesador::obtener_bloque_datos(int numero_bloque) const {
     // Interpreta la memoria principal como un vector de bloques
-    Bloque* tmp = reinterpret_cast<Bloque*>(m_memoria_datos);
+    BloqueDato* tmp = reinterpret_cast<BloqueDato*>(m_memoria_datos);
 
     return tmp[numero_bloque];
 }
@@ -104,35 +104,31 @@ void Procesador::aumentar_reloj() {
     else {
         ++m_reloj;
         qDebug() << "El valor del reloj es de: " << m_reloj;
+        // Actualizar los estados de los bloques de la caché
+        actualizar_estados_cache_datos();
         m_cuenta = m_numero_de_nucleos;
         m_condicion.wakeAll();
     }
     m_mutex_barrera.unlock();
 }
 
-void Procesador::fin_nucleo(int numero_nucleo) {
+void Procesador::fin_nucleo() {
     QMutexLocker locker(&m_mutex_numero_de_nucleos);
     // Se resta del conteo de la barrera
     --m_cuenta;
     // Resta la cantidad de núcleos activos
     --m_numero_de_nucleos;
 
-    // @todo administrar la consistencia de la chaché que sale de ejecucción.
-
     // Despierta a el otro núcleo si este se encontraba bloqueado
     m_condicion.wakeAll();
 }
 
-int Procesador::obtener_bloque_cache_datos(int direccion_fisica, int numero_nucleo, bool store, int dato) {
-    // Notas acerca de cuando cambiar reloj:
-    // Cambio de reloj
-    // Cuando tomo bus cambio ciclo tick
+int Procesador::obtener_bloque_cache_datos(int direccion_fisica, int numero_nucleo, bool es_store, int dato) {
     // Cuando tomo la otra cache tick
 
+    int resultado;
     int numero_bloque = direccion_fisica / 16;
-
-    int palabra_bloque = (numero_bloque % 16)/ NUMERO_BYTES_PALABRA;
-
+    int numero_palabra = (direccion_fisica % 16)/ NUMERO_BYTES_PALABRA;
     int indice = numero_bloque % NUMERO_BLOQUES_CACHE;
 
     // Bloqueo mi propia caché
@@ -142,33 +138,41 @@ int Procesador::obtener_bloque_cache_datos(int direccion_fisica, int numero_nucl
 
     // Caso 0: El bloque está en la caché local. (Si el bloque está como inválido se asume que "no está").
     if (numero_bloque == m_cache_datos[numero_nucleo].identificador_de_bloque_memoria[indice] &&
-            m_cache_datos[numero_nucleo].estado_del_bloque[indice] != ESTADO::INVALIDO) {
+            m_cache_datos[numero_nucleo].estado_del_bloque[indice] != ESTADO::INVALIDO)
+    {
+        if (es_store) {
+            // Invalidar el bloque (si está) en las demás chachés
+            for(int indice_cache = 0; indice_cache < NUMERO_NUCLEOS; ++indice_cache) {
+                if(indice_cache != numero_nucleo) {
+                    tomar_bus_cache_datos(numero_nucleo);
+                    // Candado a la caché foránea
+                    while (!m_cache_datos[indice_cache].mutex.tryLock()) {
+                        aumentar_reloj();
+                    }
+                    aumentar_reloj();
+                    // Tiene que ir a guardar en caché
+                    if (numero_bloque == m_cache_datos[indice_cache].identificador_de_bloque_memoria[indice]) {
+                        m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice_cache] = ESTADO::INVALIDO;
+                    }
+                    m_cache_datos[indice_cache].mutex.unlock();
+                }
+            }
+            m_mutex_bus_cache_datos.unlock();
+            // DUDA: ¿Después de soltar el bus debo esperar un ciclo de reloj?
+            aumentar_reloj();
 
-        // @todo devolver resultado
-        // DUDA: ¿En este método se deberia hacer absolutamente todo? (load, regresar el dato)
+            // Guarda el dato y cambia el estado
+            m_cache_datos[numero_nucleo].bloque_dato[indice].palabra[numero_palabra] = dato;
+            m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::MODIFICADO;
+            resultado = -1;
+        }
+        else {
+            resultado = m_cache_datos[numero_nucleo].bloque_dato[indice].palabra[numero_palabra];
+        }
     }
     else {
         // Caso 1: El bloque que ando buscando se encuentra en alguna de las otras cachés.
-
-        // Tomo el bus de datos
-        while (!m_mutex_bus_cache_datos.tryLock()) {
-            aumentar_reloj();
-        }
-
-        // DUDA: Situación: tengo mi caché local bloqueada y estoy tratando de tomar el bus.
-        // Si el bus lo tiene la otra caché y ocupa bloquear mi caché, pasa un deadlock
-        // ¿Cómo soluciono esto?
-
-        while(!m_mutex_bus_cache_datos.tryLock())
-        {
-            m_cache_datos[numero_nucleo].mutex.unlock();
-            aumentar_reloj();
-        }
-        m_cache_datos[numero_nucleo].mutex.lock();
-
-
-        // Tengo el bus, debo esperar un ciclo de reloj
-        aumentar_reloj();
+        tomar_bus_cache_datos(numero_nucleo);
 
         // Reviso en la demás cachés
         for(int indice_cache = 0; indice_cache < NUMERO_NUCLEOS; ++indice_cache) {
@@ -178,72 +182,75 @@ int Procesador::obtener_bloque_cache_datos(int direccion_fisica, int numero_nucl
                 while (!m_cache_datos[indice_cache].mutex.tryLock()) {
                     aumentar_reloj();
                 }
+                aumentar_reloj();
 
                 // Pregunta si el bloque está en la otra caché.
                 // Si el estado del bloque de la caché foránea está modificada, se guarda en memoria y se le cambia el estado
                 // Cuando está compartida o inválida no se hace nada con ella.
-                if(m_cache_datos[indice_cache].identificador_de_bloque_memoria[indice] == numero_bloque &&
-                        m_cache_datos[indice_cache].estado_del_bloque[indice] == ESTADO::MODIFICADO) {
+                if(m_cache_datos[indice_cache].identificador_de_bloque_memoria[indice] == numero_bloque) {
 
-                    //Procedo como si fuera un fallo de caché
-                    for (int i = 0; i < obtener_duracion_transferencia_memoria_a_cache(); ++i) {
-                        aumentar_reloj();
-                    }
-                    guardar_bloque_en_memoria_datos(m_cache_datos[indice_cache].bloques[indice]);
-
-                    if(store){
-                        if(obtener_bloque_candado_RL(indice_cache) == indice)
-                        {
-                            guardar_candado_RL(indice_cache, -1);
+                    switch (m_cache_datos[indice_cache].estado_del_bloque[indice]) {
+                    case ESTADO::COMPARTIDO:
+                        if(es_store) {
+                            m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj = ESTADO::INVALIDO;
                         }
-                        m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::INVALIDO;
-                    }
-                    else {
-                        m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
+                        break;
+
+                    case ESTADO::MODIFICADO:
+                        //Procedo como si fuera un fallo de caché
+                        for (int i = 0; i < obtener_duracion_transferencia_memoria_a_cache(); ++i) {
+                            aumentar_reloj();
+                        }
+                        guardar_bloque_en_memoria_datos(m_cache_datos[indice_cache].bloques[indice]);
+
+                        if(es_store) {
+                            if(obtener_bloque_candado_RL(indice_cache) == indice) {
+                                guardar_candado_RL(indice_cache, -1);
+                            }
+                            m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::INVALIDO;
+                        }
+                        else {
+                            m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
+                        }
+                        break;
                     }
                 }
-
                 m_cache_datos[indice_cache].mutex.unlock();
             }
         }
 
-
-        // @todo Guardar en memoria si se le cae encima a un bloque que estaba ahí.
-        if(m_cache_datos[numero_nucleo].estado_del_bloque[indice] == ESTADO::MODIFICADO)
-        {
+        // Guardar en memoria si se le cae encima a un bloque que estaba ahí.
+        if(m_cache_datos[numero_nucleo].estado_del_bloque[indice] == ESTADO::MODIFICADO) {
             guardar_bloque_en_memoria_datos(m_cache_datos[numero_bloque].bloques[indice]);
-            if(obtener_bloque_candado_RL(numero_nucleo) == indice)
-            {
+            if(obtener_bloque_candado_RL(numero_nucleo) == indice) {
                 //Ponemos el bloque como inválido pues le van a caer encima.
                 guardar_candado_RL(numero_nucleo, -1);
             }
         }
-        //Fin Guardar en memoria si se le cae encima a un bloque que estaba ahí.
 
         // Trae el bloque desde la memoria de datos
+        m_cache_datos[numero_nucleo].bloque_dato[indice] = obtener_bloque_datos(numero_bloque);
+        m_cache_datos[numero_nucleo].identificador_de_bloque_memoria[indice] = numero_bloque;
 
-        m_cache_datos[numero_nucleo].bloques[indice] = obtener_bloque_datos(numero_bloque);
-
-        if(store){
-            m_cache_datos[numero_nucleo].bloque_dato[numero_bloque].palabra[palabra_bloque].dato = dato;
+        if(es_store) {
+            m_cache_datos[numero_nucleo].bloque_dato[numero_bloque].palabra[numero_palabra] = dato;
             m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::MODIFICADO;
+            resultado = -1;
         }
         else {
+            resultado = m_cache_datos[numero_nucleo].bloque_dato[indice].palabra[numero_palabra];
             m_cache_datos[numero_nucleo].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::COMPARTIDO;
         }
 
-        m_cache_datos[numero_nucleo].identificador_de_bloque_memoria[indice] = numero_bloque;
-
-        // Suelta el bus de datos
+        // Libera el bus de datos
         m_mutex_bus_cache_datos.unlock();
     }
 
     m_cache_datos[numero_bloque].mutex.unlock();
-    return 0;
+    return resultado;
 }
 
-void Procesador::guardar_bloque_en_memoria_datos(const Bloque& bloque_a_guardar)
-{
+void Procesador::guardar_bloque_en_memoria_datos(const BloqueInstruccion& bloque_a_guardar) {
 
 }
 
@@ -270,4 +277,30 @@ int Procesador::obtener_direccion_candado_RL(int numero_nucleo)
 {
     //DUDA: No sé si será acá necesario poner un QMutexLocker
     return m_bloques_RL[numero_nucleo];
+}
+
+void Procesador::tomar_bus_cache_datos(int numero_nucleo) {
+    bool primera_vez = true;
+    while(!m_mutex_bus_cache_datos.tryLock()) {
+        if (primera_vez) {
+            m_cache_datos[numero_nucleo].mutex.unlock();
+            primera_vez = false;
+        }
+        aumentar_reloj();
+    }
+    m_cache_datos[numero_nucleo].mutex.lock();
+
+    // Tengo el bus, debo esperar un ciclo de reloj
+    aumentar_reloj();
+}
+
+void Procesador::actualizar_estados_cache_datos() {
+    for (int i = 0; i < NUMERO_NUCLEOS; ++i) {
+        for (int j = 0; j < NUMERO_BLOQUES_CACHE; ++j) {
+            if (m_cache_datos[i].estado_del_bloque_siguiente_ciclo_reloj[j] != ESTADO::SIN_CAMBIO) {
+                m_cache_datos[i].estado_del_bloque[j] = m_cache_datos[i].estado_del_bloque_siguiente_ciclo_reloj[j];
+                m_cache_datos[i].estado_del_bloque_siguiente_ciclo_reloj[j] = ESTADO::SIN_CAMBIO;
+            }
+        }
+    }
 }

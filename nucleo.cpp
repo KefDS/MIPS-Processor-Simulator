@@ -33,13 +33,6 @@ void Nucleo::run() {
             termino_hilo = ejecutar_instruccion(instruccion);
             --m_quantum_de_proceso_actual;
             m_procesador.aumentar_reloj();
-
-            // Imprimir estatus después del ciclo de reloj
-            QString resumen (QString("Núcleo %1. Registros: ").arg(m_numero_nucleo));
-            for (int i = 0; i < NUMERO_REGISTROS; ++i) {
-                resumen.append(QString("[%1] : %2, ").arg(i).arg(m_registros[i]));
-            }
-            emit reportar_estado(resumen);
         }
 
         m_registros[RL] = -1;
@@ -49,9 +42,12 @@ void Nucleo::run() {
             guardar_contexto(proceso_actual);
             m_procesador.encolar_proceso(proceso_actual);
         }
+        else {
+            emit reportar_estado(obtener_resumen_proceso());
+        }
     }
 
-    m_procesador.fin_nucleo(m_numero_nucleo);
+    m_procesador.fin_nucleo();
 
     emit reportar_estado (QString("Núcleo %1 terminó su ejecución.").arg(m_numero_nucleo));
 }
@@ -70,7 +66,7 @@ void Nucleo::guardar_contexto(Proceso& proceso) const {
 
 bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
     bool es_instruccion_fin = false;
-    int direccion_dato, numero_bloque, indice;
+    int direccion_dato;
 
     // Mueve el PC hacia la siguiente instrucción
     m_registros[PC] += NUMERO_BYTES_PALABRA;
@@ -98,17 +94,14 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
         break;
 
     case LW:
-        // @todo LW
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
         m_registros[instruccion.celda[2]] = m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo);
         break;
 
     case SW:
-        // @todo SW
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-        m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
+        m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo , true, m_registros[instruccion.celda[2]]);
         break;
-
 
     case BEQZ:
         if(m_registros[instruccion.celda[1]] == 0) {
@@ -138,21 +131,19 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
         m_registros[RL] = direccion_dato;
 
         m_procesador.guardar_candado_RL(m_numero_nucleo, direccion_dato);
-
-
         break;
 
     case SC:
-         // @todo SC
-         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-         m_registros[RL] = m_procesador.obtener_direccion_candado_RL(m_numero_nucleo);
-         if(m_registros[RL] == direccion_dato) {
-             m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
-         }
-         else {
-             m_registros[instruccion.celda[2]] = 0;
-         }
-         break;
+        // @todo SC
+        direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
+        m_registros[RL] = m_procesador.obtener_direccion_candado_RL(m_numero_nucleo);
+        if(m_registros[RL] == direccion_dato) {
+            m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
+        }
+        else {
+            m_registros[instruccion.celda[2]] = 0;
+        }
+        break;
 
     case FIN:
         es_instruccion_fin = true;
@@ -199,13 +190,13 @@ Instruccion Nucleo::obtiene_instruccion() {
     return m_cache_instrucciones->bloques[indice].palabra[numero_de_palabra];
 }
 
-int Nucleo::obtener_dato(int direccion_fisica, int numero_nucleo)
-{
-    return 0;
+QString Nucleo::obtener_resumen_proceso() {
+    // Imprimir estatus después del ciclo de reloj
+    QString resumen (QString("Núcleo %1. Registros: ").arg(m_numero_nucleo));
+    for (int i = 0; i < NUMERO_REGISTROS; ++i) {
+        resumen.append(QString("[%1] : %2, ").arg(i).arg(m_registros[i]));
+    }
+    return resumen;
 }
 
-void Nucleo::guardar_dato_a_memoria(int direccion_fisica, int dato)
-{
-
-}
 

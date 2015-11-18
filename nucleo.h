@@ -62,15 +62,10 @@ private:
 	 */
 	Instruccion obtiene_instruccion();
 
-
-    // LOAD
-    int obtener_dato(int direccion_fisica, int numero_nucleo);
-
-    // STORE
-    void guardar_dato_a_memoria(int direccion_fisica, int dato);
+    QString obtener_resumen_proceso();
 
 
-	// Miembros de la clase
+    // Variables de instancia
 
 	int m_numero_nucleo;
 	Procesador& m_procesador; // Cada núcleo tendrá su propio apuntador a procesador
