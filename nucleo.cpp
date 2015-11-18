@@ -95,12 +95,12 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 
     case LW:
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-        m_registros[instruccion.celda[2]] = m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo);
+		m_registros[instruccion.celda[2]] = m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo);
         break;
 
     case SW:
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-        m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo , true, m_registros[instruccion.celda[2]]);
+		m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo , true, m_registros[instruccion.celda[2]]);
         break;
 
     case BEQZ:
@@ -127,7 +127,7 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
     case LL:
         // @todo LL
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-        m_registros[instruccion.celda[2]] = m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo);
+		m_registros[instruccion.celda[2]] = m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo);
         m_registros[RL] = direccion_dato;
 
         m_procesador.guardar_candado_RL(m_numero_nucleo, direccion_dato);
@@ -138,7 +138,7 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
         m_registros[RL] = m_procesador.obtener_direccion_candado_RL(m_numero_nucleo);
         if(m_registros[RL] == direccion_dato) {
-            m_procesador.obtener_bloque_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
+			m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
         }
         else {
             m_registros[instruccion.celda[2]] = 0;
