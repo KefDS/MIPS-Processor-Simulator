@@ -10,7 +10,7 @@
 #define NUMERO_BLOQUES_DATOS 88
 #define NUMERO_BLOQUES_CACHE 8
 #define NUMERO_BYTES_MEMORIA_INSTRUCCIONES		NUMERO_BYTES_PALABRA * NUMERO_PALABRAS_BLOQUE * NUMERO_BLOQUES_INSTRUCCIONES
-#define NUMERO_BYTES_MEMORIA_DATOS				NUMERO_BYTES_PALABRA * NUMERO_PALABRAS_BLOQUE * NUMERO_BLOQUES_DATOS
+#define NUMERO_BYTES_MEMORIA_DATOS				NUMERO_PALABRAS_BLOQUE * NUMERO_BLOQUES_DATOS
 #define NUMERO_NUCLEOS 2
 
 #define NUMERO_REGISTROS 34 // 32 registros + PC + RL
@@ -86,22 +86,29 @@ struct Palabra {
 typedef Palabra Instruccion;
 
 /**
- * @brief Representa la unidad lógica de bloque.
+ * @brief Representa la unidad lógica de un bloque de instrucción.
+ *
+ * En esta representación una palabra se representa por medio de 4 enteros.
  */
 struct BloqueInstruccion {
 	Palabra palabra[NUMERO_PALABRAS_BLOQUE];
 };
 
+/**
+ * @brief Representa la unidad lógica de bloque de dato.
+ *
+ * En esta representación una palabra se representa por medio de 1 enteros.
+ */
 struct BloqueDato {
     int palabra[NUMERO_PALABRAS_BLOQUE];
 };
 
 /**
- * @brief Representa una caché de instrucciones y le pertenece a un núcleo.
+ * @brief Representa una caché de instrucciones y de datos. Le pertenece a un núcleo.
  */
 struct Cache {
 
-    // Atrbutos para caché de datos
+    // Atrbutos para caché de instrucciones.
     BloqueInstruccion bloques[NUMERO_BLOQUES_CACHE];
 
     // Compartido
