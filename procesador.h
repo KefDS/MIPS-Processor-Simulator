@@ -126,11 +126,11 @@ public:
 	 */
 	int realiza_operacion_cache_datos(int direccion_fisica, int numero_nucleo, bool store = false, int dato = 0);
 
-	void guardar_candado_RL(int numero_nucleo, int direccion_fisica);
+    void guardar_direccion_en_bloque_con_candado_RL(int numero_nucleo, int direccion_fisica);
 
-	int obtener_bloque_candado_RL(int numero_nucleo);
+    int obtener_bloque_con_candado_RL(int numero_nucleo);
 
-	int obtener_direccion_candado_RL(int numero_nucleo);
+    int obtener_direccion_en_bloque_con_candado_RL(int numero_nucleo);
 
         void imprimir();
 

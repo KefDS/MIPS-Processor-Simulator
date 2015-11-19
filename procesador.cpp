@@ -156,9 +156,9 @@ int Procesador::realiza_operacion_cache_datos(int direccion_fisica, int numero_n
                     if (numero_bloque == m_cache_datos[indice_cache].identificador_de_bloque_memoria[indice]) {
                         m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice_cache] = ESTADO::INVALIDO;
 
-                        qDebug() << "Operando el bloque " << indice << " y devuelvo el bloque " << obtener_bloque_candado_RL(numero_nucleo);
-                        if(obtener_bloque_candado_RL(indice_cache) == indice) {
-                            guardar_candado_RL(indice_cache, -1);
+                        qDebug() << "Operando el bloque " << indice << " y devuelvo el bloque " << obtener_bloque_con_candado_RL(numero_nucleo);
+                        if(obtener_bloque_con_candado_RL(indice_cache) == indice) {
+                            guardar_direccion_en_bloque_con_candado_RL(indice_cache, -1);
                             qDebug() << "Invalido el bloque de la " << indice_cache << " caché";
                         }
 
@@ -227,10 +227,10 @@ int Procesador::realiza_operacion_cache_datos(int direccion_fisica, int numero_n
         // Guardar en memoria si se le cae encima a un bloque que estaba ahí con estado modificado.
         if(m_cache_datos[numero_nucleo].estado_del_bloque[indice] == ESTADO::MODIFICADO) {
             guardar_bloque_en_memoria_datos(numero_bloque, m_cache_datos[numero_nucleo].bloque_dato[indice]);
-            qDebug() << "Operando el bloque " << indice << " y devuelvo el bloque " << obtener_bloque_candado_RL(numero_nucleo);
-            if(obtener_bloque_candado_RL(numero_nucleo) == indice) {
+            qDebug() << "Operando el bloque " << indice << " y devuelvo el bloque " << obtener_bloque_con_candado_RL(numero_nucleo);
+            if(obtener_bloque_con_candado_RL(numero_nucleo) == indice) {
                 //Ponemos el bloque como inválido pues le van a caer encima.
-                guardar_candado_RL(numero_nucleo, -1);
+                guardar_direccion_en_bloque_con_candado_RL(numero_nucleo, -1);
                 qDebug() << "Invalido el bloque de " << numero_nucleo;
             }
         }
@@ -267,13 +267,13 @@ void Procesador::guardar_bloque_en_memoria_datos(int numero_bloque, const Bloque
 }
 
 /*Guarda dirección física de un dato en un bloque que estará bajo candado LL-SC*/
-void Procesador::guardar_candado_RL(int numero_nucleo, int direccion_fisica)
+void Procesador::guardar_direccion_en_bloque_con_candado_RL(int numero_nucleo, int direccion_fisica)
 {
     m_bloques_RL[numero_nucleo] = direccion_fisica;
 }
 
 /*Devuelve el número de bloque que está con candado para LL-SC*/
-int Procesador::obtener_bloque_candado_RL(int numero_nucleo)
+int Procesador::obtener_bloque_con_candado_RL(int numero_nucleo)
 {
     //Para saber cuál bloque en caché local está con candado, si es que lo hay, sino devolverà -1 pues està invalido o sin candado
     int numero_bloque_candado = -1;
@@ -285,7 +285,7 @@ int Procesador::obtener_bloque_candado_RL(int numero_nucleo)
 }
 
 /*Devuelve la dirección de un dato que està bajo candado LL-SC*/
-int Procesador::obtener_direccion_candado_RL(int numero_nucleo)
+int Procesador::obtener_direccion_en_bloque_con_candado_RL(int numero_nucleo)
 {
     //DUDA: No sé si será acá necesario poner un QMutexLocker
     return m_bloques_RL[numero_nucleo];
