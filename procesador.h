@@ -132,6 +132,7 @@ public:
 
 	int obtener_direccion_candado_RL(int numero_nucleo);
 
+        void imprimir();
 
 private:
 	const int m_quantum;
@@ -181,5 +182,6 @@ private:
 	void guardar_bloque_en_memoria_datos(int numero_bloque, const BloqueDato& bloque_a_guardar);
 
 	void actualizar_estados_cache_datos();
+
 };
 #endif // PROCESADOR_H

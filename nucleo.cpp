@@ -135,8 +135,12 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 
     case SC:
         // @todo SC
+        qDebug("entro a SC");
+        m_procesador.imprimir();
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
         m_registros[RL] = m_procesador.obtener_direccion_candado_RL(m_numero_nucleo);
+
+        qDebug() << "tomo un: " << m_registros[RL] << " y en la direccion tengo: " << direccion_dato;
         if(m_registros[RL] == direccion_dato) {
 			m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
         }

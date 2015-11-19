@@ -41,12 +41,14 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
     // Se inicializa la memoria de datos en '1', esto para operaciones relacionadas con LL y SC.
     for (int i = 0; i < NUMERO_BYTES_MEMORIA_DATOS; ++i) {
         m_memoria_datos[i] = 1;
+
     }
 
     // Se inicializa el arreglo compartido para LL-SC en -1
     for(int i = 0; i < NUMERO_NUCLEOS; i++)
     {
         m_bloques_RL[i] = -1;
+        qDebug() << m_bloques_RL[i];
     }
 }
 
@@ -145,6 +147,7 @@ int Procesador::realiza_operacion_cache_datos(int direccion_fisica, int numero_n
             m_cache_datos[numero_nucleo].estado_del_bloque[indice] != ESTADO::INVALIDO)
     {
         if (es_store) {
+
             // Invalidar el bloque (si está) en las demás cachés
             tomar_bus_cache_datos(numero_nucleo);
             for(int indice_cache = 0; indice_cache < NUMERO_NUCLEOS; ++indice_cache) {
@@ -152,6 +155,16 @@ int Procesador::realiza_operacion_cache_datos(int direccion_fisica, int numero_n
                     tomar_cache_foranea(indice_cache);
                     if (numero_bloque == m_cache_datos[indice_cache].identificador_de_bloque_memoria[indice]) {
                         m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice_cache] = ESTADO::INVALIDO;
+
+                        qDebug() << "Operando el bloque " << indice << " y devuelvo el bloque " << obtener_bloque_candado_RL(numero_nucleo);
+                        if(obtener_bloque_candado_RL(indice_cache) == indice) {
+                            guardar_candado_RL(indice_cache, -1);
+                            qDebug() << "Invalido el bloque de la " << indice_cache << " caché";
+                        }
+
+
+
+
                     }
                     liberar_cache_foranea(indice_cache);
                 }
@@ -192,9 +205,13 @@ int Procesador::realiza_operacion_cache_datos(int direccion_fisica, int numero_n
                         guardar_bloque_en_memoria_datos(numero_bloque, m_cache_datos[indice_cache].bloque_dato[indice]);
 
                         if(es_store) {
+                            /*
+                            qDebug() << "Operando el bloque " << indice << " y devuelvo el bloque " << obtener_bloque_candado_RL(numero_nucleo);
                             if(obtener_bloque_candado_RL(indice_cache) == indice) {
                                 guardar_candado_RL(indice_cache, -1);
+                                qDebug() << "Invalido el bloque de " << indice_cache;
                             }
+                            */
                             m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice] = ESTADO::INVALIDO;
                         }
                         else {
@@ -210,9 +227,11 @@ int Procesador::realiza_operacion_cache_datos(int direccion_fisica, int numero_n
         // Guardar en memoria si se le cae encima a un bloque que estaba ahí con estado modificado.
         if(m_cache_datos[numero_nucleo].estado_del_bloque[indice] == ESTADO::MODIFICADO) {
             guardar_bloque_en_memoria_datos(numero_bloque, m_cache_datos[numero_nucleo].bloque_dato[indice]);
+            qDebug() << "Operando el bloque " << indice << " y devuelvo el bloque " << obtener_bloque_candado_RL(numero_nucleo);
             if(obtener_bloque_candado_RL(numero_nucleo) == indice) {
                 //Ponemos el bloque como inválido pues le van a caer encima.
                 guardar_candado_RL(numero_nucleo, -1);
+                qDebug() << "Invalido el bloque de " << numero_nucleo;
             }
         }
 
@@ -259,7 +278,7 @@ int Procesador::obtener_bloque_candado_RL(int numero_nucleo)
     //Para saber cuál bloque en caché local está con candado, si es que lo hay, sino devolverà -1 pues està invalido o sin candado
     int numero_bloque_candado = -1;
     if(m_bloques_RL[numero_nucleo] != -1){
-        numero_bloque_candado = m_bloques_RL[numero_nucleo] / 16;
+        numero_bloque_candado = ( m_bloques_RL[numero_nucleo] / 16 ) % 8;
     }
 
     return numero_bloque_candado;
@@ -315,5 +334,14 @@ void Procesador::actualizar_estados_cache_datos() {
                 m_cache_datos[i].estado_del_bloque_siguiente_ciclo_reloj[j] = ESTADO::SIN_CAMBIO;
             }
         }
+    }
+}
+
+void Procesador::imprimir()
+{
+    qDebug("Actualmente en bloques_RL:");
+    for(int i=0; i<NUMERO_NUCLEOS; i++)
+    {
+        qDebug() << m_bloques_RL[i];
     }
 }
