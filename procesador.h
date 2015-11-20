@@ -126,13 +126,23 @@ public:
      */
     int realiza_operacion_cache_datos(int direccion_fisica, int numero_nucleo, bool store = false, int dato = 0);
 
-    void guardar_direccion_en_bloque_con_candado_RL(int numero_nucleo, int direccion_fisica);
+    void guardar_direccion_en_bloque_con_candado_RL_siguiente_ciclo(int numero_nucleo, int direccion_fisica);
 
     int obtener_bloque_con_candado_RL(int numero_nucleo);
 
     int obtener_direccion_en_bloque_con_candado_RL(int numero_nucleo);
 
     void imprimir();
+
+    int obtener_registro_RL(int numero_nucleo);
+
+    void guardar_registro_RL(int numero_nucleo, int valor);
+
+    bool obtener_bandera(int numero_nucleo);
+
+    void guardar_bandera(int numero_nucleo, bool valor);
+
+
 
 private:
     const int m_quantum;
@@ -168,6 +178,9 @@ private:
     int m_pid;
 
     int* const m_bloques_RL;
+    bool* const m_bandera;
+    int* const m_registros_RL;
+    int* const m_registros_RL_siguietne_ciclo_reloj;
 
 
     // Métodos auxiliares
@@ -182,6 +195,8 @@ private:
     void guardar_bloque_en_memoria_datos(int numero_bloque, const BloqueDato& bloque_a_guardar);
 
     void actualizar_estados_cache_datos();
+
+    void actualizar_registros_RL();
 
 };
 #endif // PROCESADOR_H

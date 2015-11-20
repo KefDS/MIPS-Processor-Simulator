@@ -35,7 +35,9 @@ void Nucleo::run() {
             m_procesador.aumentar_reloj();
         }
 
-        m_registros[RL] = -1;
+        // Cuando se acaba el Quatum, se baja la bandera de LL.
+        m_procesador.guardar_registro_RL(m_numero_nucleo, -1);
+        m_procesador.guardar_bandera(m_numero_nucleo, false);
 
         // Si el hilo no ha terminado, se envía a la cola de procesos de nuevo
         if (!termino_hilo) {
@@ -53,15 +55,17 @@ void Nucleo::run() {
 }
 
 void Nucleo::cargar_contexto(const Proceso& proceso) {
-    for (int i = 0; i < NUMERO_REGISTROS; ++i) {
+    for (int i = 0; i < NUMERO_REGISTROS - 1; ++i) {
         m_registros[i] = proceso.registros[i];
     }
+    m_procesador.guardar_registro_RL(m_numero_nucleo, proceso.registros[RL]);
 }
 
 void Nucleo::guardar_contexto(Proceso& proceso) const {
-    for (int i = 0; i < NUMERO_REGISTROS; ++i) {
+    for (int i = 0; i < NUMERO_REGISTROS - 1; ++i) {
         proceso.registros[i] = m_registros[i];
     }
+    proceso.registros[RL] = m_procesador.obtener_registro_RL(m_numero_nucleo);
 }
 
 bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
@@ -125,28 +129,30 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
         break;
 
     case LL:
-        // @todo LL
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-		m_registros[instruccion.celda[2]] = m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo);
         m_registros[RL] = direccion_dato;
-
-        m_procesador.guardar_direccion_en_bloque_con_candado_RL(m_numero_nucleo, direccion_dato);
+        m_procesador.guardar_direccion_en_bloque_con_candado_RL_siguiente_ciclo(m_numero_nucleo, direccion_dato);
+        m_registros[instruccion.celda[2]] = m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo);
+        m_procesador.guardar_bandera(m_numero_nucleo, true);
+        qDebug() << "Soy el nucleo: " << m_numero_nucleo << " entrando a LL";
+        m_procesador.imprimir();
         break;
 
     case SC:
         // @todo SC
-        qDebug("entro a SC");
+        qDebug() << "Soy el nucleo: " << m_numero_nucleo << " entro a SC";
         m_procesador.imprimir();
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-        m_registros[RL] = m_procesador.obtener_direccion_en_bloque_con_candado_RL(m_numero_nucleo);
 
-        qDebug() << "tomo un: " << m_registros[RL] << " y en la direccion tengo: " << direccion_dato;
-        if(m_registros[RL] == direccion_dato) {
+        qDebug() << "Soy el núcleo: " << m_numero_nucleo <<" tomo un: " << m_registros[RL] << " y en la direccion tengo: " << direccion_dato;
+        // Si la dirección de memoria en la que debe hacerce un store, coincide con el valor de RL
+        if(m_procesador.obtener_registro_RL[m_numero_nucleo] == direccion_dato) {
 			m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
         }
         else {
             m_registros[instruccion.celda[2]] = 0;
         }
+        m_procesador.guardar_bandera(m_numero_nucleo, false);
         break;
 
     case FIN:
