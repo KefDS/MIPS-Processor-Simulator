@@ -5,7 +5,7 @@ Nucleo::Nucleo (Procesador& procesador, int numero_nucleo, QObject* parent) :
     m_numero_nucleo(numero_nucleo),
     m_procesador (procesador),
     m_cache_instrucciones(new Cache()),
-    m_registros(new int[NUMERO_REGISTROS])
+	m_registros(new int[NUMERO_REGISTROS-1])
 {
 
 }
@@ -130,23 +130,22 @@ bool Nucleo::ejecutar_instruccion(const Instruccion& instruccion) {
 
     case LL:
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
-        m_registros[RL] = direccion_dato;
-        m_procesador.guardar_direccion_en_bloque_con_candado_RL_siguiente_ciclo(m_numero_nucleo, direccion_dato);
+		m_procesador.guardar_registro_RL (m_numero_nucleo, direccion_dato);
+		m_procesador.guardar_bloque_candado_RL(m_numero_nucleo, (direccion_dato / 16));
         m_registros[instruccion.celda[2]] = m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo);
         m_procesador.guardar_bandera(m_numero_nucleo, true);
-        qDebug() << "Soy el nucleo: " << m_numero_nucleo << " entrando a LL";
+		qDebug() << "Núcleo: " << m_numero_nucleo << " entró a Load Link";
         m_procesador.imprimir();
         break;
 
     case SC:
-        // @todo SC
-        qDebug() << "Soy el nucleo: " << m_numero_nucleo << " entro a SC";
+		qDebug() << "Núcleo: " << m_numero_nucleo << " entro a Store Conditional";
         m_procesador.imprimir();
         direccion_dato = instruccion.celda[3] + m_registros[instruccion.celda[1]];
 
-        qDebug() << "Soy el núcleo: " << m_numero_nucleo <<" tomo un: " << m_registros[RL] << " y en la direccion tengo: " << direccion_dato;
+		qDebug() << "Núcleo: " << m_numero_nucleo <<" RL: " << m_procesador.obtener_registro_RL(m_numero_nucleo) << ", direccion store: " << direccion_dato;
         // Si la dirección de memoria en la que debe hacerce un store, coincide con el valor de RL
-        if(m_procesador.obtener_registro_RL[m_numero_nucleo] == direccion_dato) {
+		if(m_procesador.obtener_registro_RL(m_numero_nucleo) == direccion_dato) {
 			m_procesador.realiza_operacion_cache_datos(direccion_dato, m_numero_nucleo , true,  m_registros[instruccion.celda[2]]);
         }
         else {

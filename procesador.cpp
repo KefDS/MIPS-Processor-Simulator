@@ -14,8 +14,8 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
     m_pid(0),
     m_bloques_RL (new int[NUMERO_NUCLEOS]),
     m_bandera (new bool[NUMERO_NUCLEOS]),
-    m_bloques_RL_siguiente_ciclo_reloj (new int[NUMERO_NUCLEOS]),
-    m_registros_RL(new int[NUMERO_NUCLEOS])
+	m_registros_RL(new int[NUMERO_NUCLEOS]),
+	m_registros_RL_siguiente_ciclo_reloj(new int[NUMERO_NUCLEOS])
 {
     // Cargar las instrucciones de los archivos a memoria
     for (const auto& nombre_archivo : nombre_archivos) {
@@ -48,12 +48,11 @@ Procesador::Procesador (const QStringList& nombre_archivos, int latencia_de_memo
     }
 
     // Se inicializa el arreglo compartido para LL-SC en -1
-    for(int i = 0; i < NUMERO_NUCLEOS; i++)
-    {
+	for(int i = 0; i < NUMERO_NUCLEOS; ++i) {
         m_bloques_RL[i] = -1;
-        m_bloques_RL_siguiente_ciclo_reloj[i] = -1;
         m_bandera[i] = false;
-        qDebug() << m_bloques_RL[i];
+		m_registros_RL[i] = -1;
+		m_registros_RL_siguiente_ciclo_reloj[i] = -2;
     }
 }
 
@@ -61,6 +60,10 @@ Procesador::~Procesador() {
     delete[] m_memoria_instrucciones;
     delete[] m_memoria_datos;
     delete[] m_cache_datos;
+	delete[] m_bloques_RL;
+	delete[] m_bandera;
+	delete[] m_registros_RL;
+	delete[] m_registros_RL_siguiente_ciclo_reloj;
 }
 
 bool Procesador::cola_vacia() {
@@ -119,7 +122,7 @@ void Procesador::aumentar_reloj() {
         //qDebug() << "El valor del reloj es de: " << m_reloj;
         // Actualizar los estados de los bloques de la caché
         actualizar_estados_cache_datos();
-        actualizar_bloques_RL();
+		actualizar_registros_RL();
         m_cuenta = m_numero_de_nucleos;
         m_condicion.wakeAll();
     }
@@ -155,18 +158,19 @@ int Procesador::realiza_operacion_cache_datos(int direccion_fisica, int numero_n
     {
         if (es_store) {
             // Invalidar el bloque (si está) en las demás cachés
-            tomar_bus_cache_datos(numero_nucleo);
+			obtener_bus_cache_datos(numero_nucleo);
             for(int indice_cache = 0; indice_cache < NUMERO_NUCLEOS; ++indice_cache) {
                 if(indice_cache != numero_nucleo) {
-                    qDebug() << "Me llame con el nucleo: " << numero_nucleo << " y estoy con la cache foranea: " << indice_cache << " Y EL BLOQUE ESTA EN LA CACHE LOCAL";
-                    tomar_cache_foranea(indice_cache);
+					qDebug() << "Me llame con el nucleo: " << numero_nucleo << " y estoy con la cache foranea: " << indice_cache;
+					obtener_cache_foranea(indice_cache);
                     if (numero_bloque == m_cache_datos[indice_cache].identificador_de_bloque_memoria[indice]) {
                         m_cache_datos[indice_cache].estado_del_bloque_siguiente_ciclo_reloj[indice_cache] = ESTADO::INVALIDO;
+
                         // Si en la otra caché está activo el LL, inválido el registro RL
                         if(obtener_bandera(indice_cache)) {
-                            qDebug() << "Soy el nucleo: " << numero_nucleo <<" #1. Operando el bloque " << numero_bloque << " y devuelvo el bloque " << obtener_bloque_con_candado_RL(indice_cache);
+							qDebug() << "Núcleo: " << numero_nucleo << ", Núcleo a verificar: " << indice_cache << ", bloque: " << numero_bloque << ", bloque en candado RL: " << obtener_bloque_candado_RL(indice_cache);
                             //Si el nùmero de bloque en la caché foránea tiene candado LL: se invalída en el arreglo LL - SC
-                            if(obtener_bloque_con_candado_RL(indice_cache) == numero_bloque) {
+							if(obtener_bloque_candado_RL(indice_cache) == numero_bloque) {
                                 guardar_registro_RL(indice_cache, -1);
                                 qDebug() << "Invalido el bloque de la caché: " << indice_cache;
                                 imprimir();
@@ -188,13 +192,12 @@ int Procesador::realiza_operacion_cache_datos(int direccion_fisica, int numero_n
         }
     }
     else {
-        qDebug() << "Soy el nucleo: " << numero_nucleo << " Fallo de cache";
         // Caso 1: El bloque que ando buscando se encuentra en alguna de las otras cachés o debo traerla de memoria principal.
-        tomar_bus_cache_datos(numero_nucleo);
+		obtener_bus_cache_datos(numero_nucleo);
         // Reviso en la demás cachés
         for(int indice_cache = 0; indice_cache < NUMERO_NUCLEOS; ++indice_cache) {
             if(indice_cache != numero_nucleo) {
-                tomar_cache_foranea(indice_cache);
+				obtener_cache_foranea(indice_cache);
 
                 // Pregunta si el bloque está en la otra caché.
                 // Si el estado del bloque de la caché foránea está modificada, se guarda en memoria y se le cambia el estado
@@ -257,42 +260,30 @@ void Procesador::guardar_bloque_en_memoria_datos(int numero_bloque, const Bloque
     }
     BloqueDato* tmp = reinterpret_cast<BloqueDato*>(m_memoria_datos);
     tmp[numero_bloque - NUMERO_BLOQUES_INSTRUCCIONES] = bloque_a_guardar;
-    aumentar_reloj ();
-}
-
-/*Guarda dirección física de un dato en un bloque que estará bajo candado LL-SC*/
-void Procesador::guardar_direccion_en_bloque_con_candado_RL_siguiente_ciclo(int numero_nucleo, int direccion_fisica) {
-    m_bloques_RL_siguiente_ciclo_reloj[numero_nucleo] = direccion_fisica;
+	aumentar_reloj();
 }
 
 void Procesador::actualizar_registros_RL() {
     for (int i = 0; i < NUMERO_NUCLEOS; ++i) {
-
+		if (m_registros_RL_siguiente_ciclo_reloj[i] != -2) {
+			m_registros_RL[i] = m_registros_RL_siguiente_ciclo_reloj[i];
+			m_registros_RL_siguiente_ciclo_reloj[i] = -2;
+		}
     }
 }
 
-/*Devuelve el número de bloque que está con candado para LL-SC*/
-int Procesador::obtener_bloque_con_candado_RL(int numero_nucleo) {
-    //Para saber cuál bloque en caché local está con candado, si es que lo hay, sino devolverà -1 pues està invalido o sin candado
-    int numero_bloque_candado = -1;
-    if(m_bloques_RL[numero_nucleo] != -1){
-        numero_bloque_candado = m_bloques_RL[numero_nucleo] / 16 ;
-    }
-    return numero_bloque_candado;
+int Procesador::obtener_bloque_candado_RL(int numero_nucleo) const {
+		return m_bloques_RL[numero_nucleo];
 }
 
-/*Devuelve la dirección de un dato que està bajo candado LL-SC*/
-int Procesador::obtener_direccion_en_bloque_con_candado_RL(int numero_nucleo)
-{
-    //DUDA: No sé si será acá necesario poner un QMutexLocker
-    return m_bloques_RL[numero_nucleo];
+void Procesador::guardar_bloque_candado_RL(int numero_nucleo, int numero_bloque) {
+	m_bloques_RL[numero_nucleo] = numero_bloque;
 }
 
-void Procesador::tomar_bus_cache_datos(int numero_nucleo) {
+void Procesador::obtener_bus_cache_datos(int numero_nucleo) {
     bool primera_vez = true;
 
-    if(!m_mutex_bus_cache_datos.tryLock())
-    {
+	if(!m_mutex_bus_cache_datos.tryLock()) {
         while(!m_mutex_bus_cache_datos.tryLock()) {
             if (primera_vez) {
                 m_cache_datos[numero_nucleo].mutex.unlock();
@@ -307,11 +298,10 @@ void Procesador::tomar_bus_cache_datos(int numero_nucleo) {
 }
 
 void Procesador::liberar_bus_cache_datos() {
-    // DUDA: ¿Después de soltar el bus debo esperar un ciclo de reloj?
     m_mutex_bus_cache_datos.unlock();
 }
 
-void Procesador::tomar_cache_foranea(int indice_cache) {
+void Procesador::obtener_cache_foranea(int indice_cache) {
     while (!m_cache_datos[indice_cache].mutex.tryLock()) {
         aumentar_reloj();
     }
@@ -319,7 +309,6 @@ void Procesador::tomar_cache_foranea(int indice_cache) {
 }
 
 void Procesador::liberar_cache_foranea(int indice_cache) {
-    // DUDA: ¿Después de soltar la cache debo esperar un ciclo de reloj?
     m_cache_datos[indice_cache].mutex.unlock();
 }
 
@@ -334,22 +323,22 @@ void Procesador::actualizar_estados_cache_datos() {
     }
 }
 
-void Procesador::imprimir() {
-    qDebug() << "Actualmente en bloques_RL: " << "[0] = " << m_bloques_RL[0] << " [1] = " << m_bloques_RL[1];
-}
-
-int Procesador::obtener_registro_RL(int numero_nucleo) {
+int Procesador::obtener_registro_RL(int numero_nucleo) const {
     return m_registros_RL[numero_nucleo];
 }
 
 void Procesador::guardar_registro_RL(int numero_nucleo, int valor) {
-    m_registros_RL[numero_nucleo] = valor;
+	m_registros_RL_siguiente_ciclo_reloj[numero_nucleo] = valor;
 }
 
-bool Procesador::obtener_bandera(int numero_nucleo) {
+bool Procesador::obtener_bandera(int numero_nucleo) const {
     return m_bandera[numero_nucleo];
 }
 
 void Procesador::guardar_bandera(int numero_nucleo, bool valor) {
     m_bandera[numero_nucleo] = valor;
+}
+
+void Procesador::imprimir() {
+	qDebug() << "Actualmente en bloques_RL: " << "[0] = " << m_bloques_RL[0] << " [1] = " << m_bloques_RL[1];
 }
