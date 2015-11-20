@@ -261,16 +261,13 @@ void Procesador::guardar_bloque_en_memoria_datos(int numero_bloque, const Bloque
 }
 
 /*Guarda dirección física de un dato en un bloque que estará bajo candado LL-SC*/
-void Procesador::guardar_direccion_en_bloque_con_candado_RL_siguiente_ciclo(int numero_nucleo, int direccion_fisica)
-{
+void Procesador::guardar_direccion_en_bloque_con_candado_RL_siguiente_ciclo(int numero_nucleo, int direccion_fisica) {
     m_bloques_RL_siguiente_ciclo_reloj[numero_nucleo] = direccion_fisica;
 }
 
-void Procesador::actualizar_bloques_RL()
-{
-    for(int i=0; i < NUMERO_NUCLEOS; i++)
-    {
-        m_bloques_RL[i] = m_bloques_RL_siguiente_ciclo_reloj[i];
+void Procesador::actualizar_registros_RL() {
+    for (int i = 0; i < NUMERO_NUCLEOS; ++i) {
+
     }
 }
 
