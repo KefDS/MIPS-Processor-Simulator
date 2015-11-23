@@ -176,6 +176,7 @@ int Procesador::realiza_operacion_cache_datos(int direccion_fisica, int numero_n
 				// Mientras no pude tomar el bus, me pudieron inválidar el bloque, por lo que si esto ocurre debo llamar a la función de nuevo
 				if (m_cache_datos[numero_nucleo].estado_del_bloque[indice] == ESTADO::INVALIDO) {
 					liberar_bus_cache_datos();
+					m_cache_datos[numero_nucleo].mutex.unlock();
 					return realiza_operacion_cache_datos(direccion_fisica, numero_nucleo, true, dato);
 				}
 
@@ -302,12 +303,6 @@ void Procesador::imprimir_memoria_y_cache() {
 	}
 
 	emit reportar_estado(resumen);
-
-	//	resumen.append(QString("==Caché==\n"));
-	//	for (int i = 0; i < NUMERO_NUCLEOS; ++i) {
-	//		resumen.append(QString("Caché %1").arg(i));
-	//		for (int j = 0; j < )
-	//	}
 }
 
 int Procesador::obtener_bloque_candado_RL(int numero_nucleo) const {
