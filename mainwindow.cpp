@@ -36,3 +36,7 @@ void MainWindow::empezar_simulacion() {
 void MainWindow::imprimir_estado(const QString &estado) {
 	ui->salidaSimulacion->append(estado);
 }
+
+void MainWindow::aumenta_reloj(const QString& estado) {
+
+}

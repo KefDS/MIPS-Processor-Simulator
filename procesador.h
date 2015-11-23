@@ -144,6 +144,11 @@ public:
 	void imprimir();
 
 
+signals:
+	aumenta_reloj(const QString& valor_reloj);
+	reportar_estado(const QString& estado);
+
+
 private:
 	const int m_quantum;
 	const int m_duracion_transferencia_memoria_a_cache;

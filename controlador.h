@@ -36,6 +36,7 @@ public:
 
 signals:
 	void enviar_estado(const QString& estado);
+	void aumenta_reloj();
 
 private:
 	QThread m_thread_nucleo_0;		/**< QThread que contendrá el núcleo 0 */

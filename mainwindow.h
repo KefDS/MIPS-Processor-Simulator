@@ -19,6 +19,7 @@ public:
 
 public slots:
 	void imprimir_estado(const QString& estado);
+	void aumenta_reloj(const QString& estado);
 
 private slots:
 	void seleccionar_archivos();
