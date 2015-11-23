@@ -62,10 +62,10 @@ private:
 	 */
 	Instruccion obtiene_instruccion();
 
-    QString obtener_resumen_proceso();
+	QString obtener_resumen_proceso();
 
 
-    // Variables de instancia
+	// Variables de instancia
 
 	int m_numero_nucleo;
 	Procesador& m_procesador; // Cada núcleo tendrá su propio apuntador a procesador

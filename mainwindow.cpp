@@ -38,5 +38,5 @@ void MainWindow::imprimir_estado(const QString &estado) {
 }
 
 void MainWindow::aumenta_reloj(const QString& estado) {
-
+	ui->Reloj->setText("Reloj: " + estado);
 }

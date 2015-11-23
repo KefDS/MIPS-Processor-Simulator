@@ -140,13 +140,9 @@ public:
 	void guardar_bandera(int numero_nucleo, bool valor);
 
 
-	// Temporal
-	void imprimir();
-
-
 signals:
-	aumenta_reloj(const QString& valor_reloj);
-	reportar_estado(const QString& estado);
+	void aumenta_reloj(const QString& valor_reloj);
+	void reportar_estado(const QString& estado);
 
 
 private:
@@ -184,11 +180,13 @@ private:
 
 
 	// Variables para realizar los LL y el SC
-
-	int* const m_bloques_RL;
+	int* const  m_bloques_RL;
+	int* const  m_bloques_RL_siguiente_ciclo_reloj;
 	bool* const m_bandera;
-	int* const m_registros_RL;
-	int* const m_registros_RL_siguiente_ciclo_reloj;
+	int* const  m_registros_RL;
+	int* const  m_registros_RL_siguiente_ciclo_reloj;
+
+	static bool m_bandera_impresion;
 
 
 	// Métodos auxiliares
@@ -202,8 +200,12 @@ private:
 
 	void guardar_bloque_en_memoria_datos(int numero_bloque, const BloqueDato& bloque_a_guardar);
 
+	void actualizar_bloques_RL();
+
 	void actualizar_estados_cache_datos();
 
 	void actualizar_registros_RL();
+
+	void imprimir_memoria_y_cache();
 };
 #endif // PROCESADOR_H
